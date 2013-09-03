@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+#include "encoder.h"
 #include "serial.h"
 #include "leds.h"
 #include "mp3.h"
@@ -11,6 +12,14 @@
 
 int main()
 {
+    LEDs_init();
+    encoder_init();
+    int c=0;
+    while (1) {
+        LEDs(encoder_status());
+        _delay_ms(100);
+    }
+    /*
     serial_init();
     LEDs_init();
     mp3_init();
@@ -40,4 +49,5 @@ int main()
         LEDs(c--);
         _delay_ms(100);
     }
+    */
 }
