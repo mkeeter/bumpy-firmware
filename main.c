@@ -1,23 +1,27 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 
 #include "encoder.h"
-#include "serial.h"
+//#include "serial.h"
 #include "leds.h"
-#include "mp3.h"
+//#include "mp3.h"
 
-#include "sd-reader/sd_raw.h"
-#include "sd-reader/fat.h"
-#include "sd-reader/partition.h"
+//#include "sd-reader/sd_raw.h"
+//#include "sd-reader/fat.h"
+//#include "sd-reader/partition.h"
 
 int main()
 {
     LEDs_init();
     encoder_init();
+
+    sei(); // enable interrupts (used for encoder)
+
     int c=0;
     while (1) {
-        LEDs(encoder_status());
-        _delay_ms(100);
+        LEDs(encoder);
+        _delay_ms(10);
     }
     /*
     serial_init();
