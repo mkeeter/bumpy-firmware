@@ -11,8 +11,8 @@ $(HEX): $(OUT)
 	avr-size --mcu=$(MMCU) --format=avr $(OUT)
 
 #$(OUT): $(OBJECTS) *.c *.h sd-reader/*.c sd-reader/*.h
-$(OUT): main.c leds.c leds.h encoder.c encoder.h
-	avr-gcc $(CFLAGS) -o $(OUT) main.c leds.c encoder.c #*.c sd-reader/*.c
+$(OUT): main.c leds.c leds.h encoder.c encoder.h serial.c serial.h
+	avr-gcc $(CFLAGS) -o $(OUT) main.c leds.c encoder.c serial.c #*.c sd-reader/*.c
 
 clean:
 	rm $(OUT) $(HEX)

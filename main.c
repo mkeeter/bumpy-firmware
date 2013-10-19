@@ -3,7 +3,7 @@
 #include <util/delay.h>
 
 #include "encoder.h"
-//#include "serial.h"
+#include "serial.h"
 #include "leds.h"
 //#include "mp3.h"
 
@@ -15,13 +15,15 @@ int main()
 {
     LEDs_init();
     encoder_init();
+    serial_init();
 
     sei(); // enable interrupts (used for encoder)
 
     int c=0;
     while (1) {
         LEDs(encoder);
-        _delay_ms(10);
+        _delay_ms(500);
+        printf("OMG!\n");
     }
     /*
     serial_init();

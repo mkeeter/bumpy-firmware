@@ -69,9 +69,6 @@ void serial_init(void)
     // Initialize stdout to the custom file-style handler
     // that we defined above.
     stdout = &serial_stdout;
-
-    // Enable interrupts!
-    sei();
 }
 
 
