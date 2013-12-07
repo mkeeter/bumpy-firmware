@@ -9,23 +9,23 @@ volatile int encoder=0;
 void encoder_init()
 {
     // Set internal pull-ups to on
-    PORTC |= (1 << PC2); // encoder B
-    PORTD |= (1 << PD0); // encoder switch
-    PORTD |= (1 << PD1); // encoder A
+    PORTB |= (1 << PB5); // encoder B
+    PORTB |= (1 << PB6); // encoder switch
+    PORTC |= (1 << PC6); // encoder A
 
     // Encoder B is on the pin corresponding to PCINT11,
     // so we'll enable pin change interrupt 1 with the correct
     // mask register value.
-    PCICR |= (1 << PCIE1);
-    PCMSK1 |= (1 << PCINT11);
+    PCICR |= (1 << PCIE0);
+    PCMSK0 |= (1 << PCINT5);
 }
 
-ISR(PCINT1_vect)
+ISR(PCINT0_vect)
 {
-    // Only count a tick on a rising edge
-    if (PINC & (1 << PC2)) {
+    // Only count a tick on a rising edge of ENCODER_B
+    if (PINB & (1 << PB5)) {
         // Determine direction from ENCODER_A
-        if (PIND & (1 << PD1))  encoder++;
+        if (PINC & (1 << PC6))  encoder++;
         else                    encoder--;
     }
 }

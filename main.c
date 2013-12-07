@@ -5,30 +5,20 @@
 #include "encoder.h"
 #include "serial.h"
 #include "leds.h"
-//#include "mp3.h"
+#include "mp3.h"
 
-//#include "sd-reader/sd_raw.h"
-//#include "sd-reader/fat.h"
-//#include "sd-reader/partition.h"
+#include "sd-reader/sd_raw.h"
+#include "sd-reader/fat.h"
+#include "sd-reader/partition.h"
 
 int main()
 {
     LEDs_init();
     encoder_init();
     serial_init();
-
-    sei(); // enable interrupts (used for encoder)
-
-    int c=0;
-    while (1) {
-        LEDs(encoder);
-        _delay_ms(500);
-        printf("OMG!\n");
-    }
-    /*
-    serial_init();
-    LEDs_init();
     mp3_init();
+
+    sei(); // enable interrupts (used for encoder and serial comms)
 
     if (sd_raw_init()) {
         printf("SD card init successful\n");
@@ -50,10 +40,9 @@ int main()
     const uint16_t status = mp3_read(0x1);
     printf("VS1063ds status = %x\n", status);
 
-    uint8_t c = 0;
+    uint8_t c=0;
     while (1) {
-        LEDs(c--);
+        LEDs(++c);
         _delay_ms(100);
     }
-    */
 }

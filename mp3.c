@@ -8,29 +8,29 @@
 void mp3_init()
 {
     // MP3 chip select
-    OUTPUT(DDRB, PB5);
-    SET(PORTB, PB5);
+    OUTPUT(DDRF, PF4);
+    SET(PORTF, PF4);
 
     // MP3 data select
-    OUTPUT(DDRB, PB6);
-    SET(PORTB, PB6);
+    OUTPUT(DDRF, PF1);
+    SET(PORTF, PF1);
 
     // MP3 chip reset
-    OUTPUT(DDRC, PC7);
-    SET(PORTC, PC7);
+    OUTPUT(DDRF, PF5);
+    SET(PORTF, PF5);
 
-    // All of the spi stuff is configured by the SD card, so we don't
-    // need to do anything here.
+    // All of the spi stuff is configured by the SD card,
+    // so we don't need to do anything here.
 }
 
 void mp3_select()
 {
-    CLEAR(PORTB, PB5);
+    CLEAR(PORTF, PF4);
 }
 
 void mp3_deselect()
 {
-    SET(PORTB, PB5);
+    SET(PORTF, PF4);
 }
 
 uint8_t spi_send(const uint8_t b)
@@ -45,7 +45,7 @@ uint16_t mp3_read(const uint8_t addr)
 {
     LEDs(0);
     // Wait for DREQ to go low
-    while(!(PINC & (1 << PC6)));
+    while(!(PINF & (1 << PF6)));
     LEDs(1);
 
     // Select the mp3 for a data transmission
