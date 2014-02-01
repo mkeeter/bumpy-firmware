@@ -16,6 +16,22 @@ int main()
     LEDs_init();
     encoder_init();
     serial_init();
+    sei();
+
+    //put_char('x');
+    while (1)
+    {
+        LEDs(encoder_switch);
+        printf("hello, world\n");
+        _delay_ms(1000);
+    }
+#if 0
+    while (1)
+    {
+        LEDs(~(PINB & (1 << PB6)));
+        _delay_ms(10);
+    }
+    encoder_init();
     mp3_init();
 
     sei(); // enable interrupts (used for encoder and serial comms)
@@ -45,4 +61,5 @@ int main()
         LEDs(++c);
         _delay_ms(100);
     }
+#endif
 }
