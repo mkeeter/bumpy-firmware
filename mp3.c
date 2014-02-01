@@ -44,9 +44,13 @@ uint8_t spi_send(const uint8_t b)
 uint16_t mp3_read(const uint8_t addr)
 {
     LEDs(0);
-    // Wait for DREQ to go low
+    // Wait for DREQ to go high (signaling that the mp3 chip
+    // can take in an SPI command).
     while(!(PINF & (1 << PF6)));
     LEDs(1);
+
+    // Turn SPI frequency doubling off
+    SPSR &= ~(1 << SPI2X);
 
     // Select the mp3 for a data transmission
     mp3_select();
@@ -61,6 +65,9 @@ uint16_t mp3_read(const uint8_t addr)
     out = spi_send(0);
 
     mp3_deselect();
+
+    // Turn SPI frequency doubling back on
+    SPSR |= (1 << SPI2X);
 
     return out;
 }
