@@ -1,9 +1,10 @@
+#include <stdio.h>
 #include <avr/io.h>
 
 #include "mp3.h"
 #include "macros.h"
 
-void mp3_init()
+int mp3_init()
 {
     // MP3 chip select
     OUTPUT(DDRF, PF4);
@@ -19,6 +20,15 @@ void mp3_init()
 
     // All of the spi stuff is configured by the SD card,
     // so we don't need to do anything here.
+
+    // Check to make sure that this chip is the right one.
+    const uint16_t version = (mp3_read(0x1) & 0xf0) >> 4;
+    if (version != 3) {
+        printf("Error: Unexpected VS1003ds version (%i)", version);
+        return 0;
+    }
+
+    return 1;
 }
 
 void mp3_select()

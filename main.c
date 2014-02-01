@@ -13,22 +13,14 @@ int main()
     LEDs_init();
     encoder_init();
     serial_init();
-    mp3_init();
-    sei();
 
-    if (sd_init()) { printf("SD card initialized!\n"); }
+    printf("Booting up...\n");
 
-    const uint16_t status = mp3_read(0x1);
-    if ((status & 0xf0) == 0x30) {
-        printf("VS1063ds status is good\n");
-    } else {
-        printf("Invalid VS1063ds status (%x%x)", status, status >> 8);
-    }
+    if (sd_init())  { printf("SD card initialized!\n"); }
+    if (mp3_init()) { printf("VS1003  initialized!\n"); }
 
     while (1)
     {
-        LEDs(encoder_switch);
-        printf("hello, world\n");
-        _delay_ms(1000);
+        _delay_ms(10);
     }
 }
