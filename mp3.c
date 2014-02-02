@@ -23,8 +23,15 @@ int mp3_init()
     // All of the spi stuff is configured by the SD card,
     // so we don't need to do anything here.
 
+    // Turn SPI frequency doubling off for this one communication
+    SPSR &= ~(1 << SPI2X);
+
     // Turn up clock multiplier
     mp3_write(0x3, 0x9800);
+
+    // Turn SPI frequency doubling back on, since the VS1003 now
+    // has a clock multiplier enabled and can talk fast.
+    SPSR |= (1 << SPI2X);
 
     // Check to make sure that this chip is the right one.
     const uint16_t version = (mp3_read(0x1) & 0xf0) >> 4;
@@ -73,8 +80,6 @@ uint8_t mp3_spi_send(const uint8_t b)
 
 void mp3_send_data(uint8_t* buffer)
 {
-    // Turn SPI frequency doubling off
-    SPSR &= ~(1 << SPI2X);
 
     // Select the mp3 for a data transmission
     mp3_data_select();
@@ -87,8 +92,6 @@ void mp3_send_data(uint8_t* buffer)
     // Deselect SDI port.
     mp3_data_deselect();
 
-    // Turn SPI frequency doubling back on
-    SPSR |= (1 << SPI2X);
 }
 
 void mp3_wait()
@@ -102,9 +105,6 @@ void mp3_wait()
 uint16_t mp3_read(const uint8_t addr)
 {
     mp3_wait();
-
-    // Turn SPI frequency doubling off
-    SPSR &= ~(1 << SPI2X);
 
     // Select the mp3 for a data transmission
     mp3_select();
@@ -120,16 +120,12 @@ uint16_t mp3_read(const uint8_t addr)
 
     mp3_deselect();
 
-    // Turn SPI frequency doubling back on
-    SPSR |= (1 << SPI2X);
-
     return out;
 }
 
 void mp3_write(const uint8_t addr, const uint16_t data)
 {
     mp3_wait();
-    SPSR &= ~(1 << SPI2X); // turn off SPI frequency doubling
     mp3_select();
 
     mp3_spi_send(0b00000010); // opcode for write
@@ -138,5 +134,4 @@ void mp3_write(const uint8_t addr, const uint16_t data)
     mp3_spi_send(data & 0xff);
 
     mp3_deselect();
-    SPSR |= (1 << SPI2X); // turn SPI frequency doubling back on
 }
