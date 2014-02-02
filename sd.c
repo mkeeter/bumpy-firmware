@@ -93,6 +93,7 @@ void sd_next_song()
         }
     }
 
+    printf("Opening file: %s\n", file_dir.long_name);
     file = fat_open_file(fs, &file_dir);
 }
 

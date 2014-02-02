@@ -139,23 +139,27 @@ void mp3_write(const uint8_t addr, const uint16_t data)
 }
 
 
+void mp3_write_volume()
+{
+    uint16_t v = 10*(8 - mp3_volume);
+    mp3_write(0xb, (v << 8) | v);
+}
+
 void mp3_volume_up()
 {
-    const uint16_t vol = mp3_read(0xb) & 0xff;
-    if (vol >= 10)
+    if (mp3_volume < 8)
     {
-        mp3_write(0xb, ((vol - 10) << 8) | ((vol - 10) & 0xff));
         mp3_volume++;
+        mp3_write_volume();
     }
 }
 
 
 void mp3_volume_down()
 {
-    const uint8_t vol = mp3_read(0xb) & 0xff;
-    if (vol <= 60)
+    if (mp3_volume > 1)
     {
-        mp3_write(0xb, ((vol + 10) << 8) | ((vol + 10) & 0xff));
         mp3_volume--;
+        mp3_write_volume();
     }
 }
