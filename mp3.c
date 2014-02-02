@@ -45,34 +45,34 @@ int mp3_init()
     return 1;
 }
 
-void mp3_select()
+static inline void mp3_select()
 {
     CLEAR(PORTF, PF4);
 }
 
-void mp3_deselect()
+static inline void mp3_deselect()
 {
     SET(PORTF, PF4);
 }
 
-void mp3_data_select()
+static inline void mp3_data_select()
 {
     CLEAR(PORTF, PF1);
 }
 
-void mp3_data_deselect()
+static inline void mp3_data_deselect()
 {
     SET(PORTF, PF1);
 }
 
 // Checks DREQ line and returns True if it's high
-bool mp3_wants_data()
+inline bool mp3_wants_data()
 {
     return PINF & (1 << PF6);
 }
 
 
-uint8_t mp3_spi_send(const uint8_t b)
+static inline uint8_t mp3_spi_send(const uint8_t b)
 {
     SPDR = b;
     while(!(SPSR & (1 << SPIF)));
@@ -96,7 +96,7 @@ void mp3_send_data(uint8_t* buffer)
 
 }
 
-void mp3_wait()
+static inline void mp3_wait()
 {
     // Wait for DREQ to go high (signaling that the mp3 chip
     // can take in an SPI command).

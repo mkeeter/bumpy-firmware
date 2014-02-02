@@ -27,25 +27,25 @@ static FILE serial_stdout = FDEV_SETUP_STREAM(
     );
 
 
-static int in_buffer_full(void)
+static inline int in_buffer_full(void)
 {
     return in_buffer_write == ((in_buffer_read - 1) & BUFFER_MASK);
 }
 
 
-static int out_buffer_full(void)
+static inline int out_buffer_full(void)
 {
     return out_buffer_write == ((out_buffer_read - 1) & BUFFER_MASK);
 }
 
 
-static int in_buffer_empty(void)
+static inline int in_buffer_empty(void)
 {
     return in_buffer_write == in_buffer_read;
 }
 
 
-static int out_buffer_empty(void)
+static inline int out_buffer_empty(void)
 {
     return out_buffer_write == out_buffer_read;
 }

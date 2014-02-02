@@ -18,7 +18,7 @@ bool has_songs = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool has_extension_mp3(struct fat_dir_entry_struct f)
+static inline bool sd_has_extension_mp3(struct fat_dir_entry_struct f)
 {
     return !strcmp("mp3", f.long_name + strlen(f.long_name) - 3);
 }
@@ -55,7 +55,7 @@ int sd_init()
     // one file ending in "mp3".
     while(fat_read_dir(root, &file_dir))
     {
-        if (has_extension_mp3(file_dir))
+        if (sd_has_extension_mp3(file_dir))
         {
             has_songs = true;
             break;
@@ -87,7 +87,7 @@ void sd_next_song()
         }
 
         // Check to see if this directory entry has mp3 as its extension
-        else if (has_extension_mp3(file_dir))
+        else if (sd_has_extension_mp3(file_dir))
         {
             break;
         }
