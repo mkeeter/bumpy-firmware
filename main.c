@@ -66,6 +66,11 @@ void animate_prev()
     sd_prev_song();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+typedef void (*f_ptr_t)(void);
+f_ptr_t start_bootloader = (f_ptr_t)0x3800;
+
 int main()
 {
     LEDs_init();
@@ -73,6 +78,22 @@ int main()
     serial_init();
     tenths_init();
     sei();
+
+    // If the encoder switch is pressed on startup, jump to DFU bootloader.
+    if (encoder_switch)
+    {
+        printf("Jumping to bootloader!\n");
+        for (int i=0; i < 4; ++i)
+        {
+            for (int j=0; j < 8; ++j)   LEDs[j] = 8;
+            _delay_ms(200);
+            for (int j=0; j < 8; ++j)   LEDs[j] = 0;
+            _delay_ms(200);
+        }
+        cli();
+        start_bootloader();
+    }
+
 
     printf("Booting up...\n");
 
