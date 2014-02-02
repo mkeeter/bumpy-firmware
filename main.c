@@ -16,6 +16,7 @@ int main()
     LEDs_init();
     encoder_init();
     serial_init();
+    sei();
 
     printf("Booting up...\n");
 
