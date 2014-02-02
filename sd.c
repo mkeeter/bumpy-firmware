@@ -76,7 +76,8 @@ void sd_next_song()
     file = fat_open_file(fs, &file_dir);
 }
 
-void sd_get_data(uint8_t* buffer, uintptr_t amount)
+bool sd_get_data(uint8_t* buffer, uintptr_t amount)
 {
-    if (file)   fat_read_file(file, buffer, amount);
+    if (file)   return fat_read_file(file, buffer, amount) > 0;
+    else        return true;
 }

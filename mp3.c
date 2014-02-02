@@ -4,6 +4,8 @@
 #include "mp3.h"
 #include "macros.h"
 
+void mp3_write(const uint8_t addr, const uint16_t data);
+
 int mp3_init()
 {
     // MP3 chip select
@@ -20,6 +22,9 @@ int mp3_init()
 
     // All of the spi stuff is configured by the SD card,
     // so we don't need to do anything here.
+
+    // Turn up clock multiplier
+    mp3_write(0x3, 0x9800);
 
     // Check to make sure that this chip is the right one.
     const uint16_t version = (mp3_read(0x1) & 0xf0) >> 4;
@@ -51,12 +56,39 @@ void mp3_data_deselect()
     SET(PORTF, PF1);
 }
 
+// Checks DREQ line and returns True if it's high
+bool mp3_wants_data()
+{
+    return PINF & (1 << PF6);
+}
+
+
 uint8_t mp3_spi_send(const uint8_t b)
 {
     SPDR = b;
     while(!(SPSR & (1 << SPIF)));
     CLEAR(SPSR, SPIF);
     return SPDR;
+}
+
+void mp3_send_data(uint8_t* buffer)
+{
+    // Turn SPI frequency doubling off
+    SPSR &= ~(1 << SPI2X);
+
+    // Select the mp3 for a data transmission
+    mp3_data_select();
+
+    for (int i=0; i < MP3_BUFFER_SIZE; ++i)
+    {
+        mp3_spi_send(buffer[i]);
+    }
+
+    // Deselect SDI port.
+    mp3_data_deselect();
+
+    // Turn SPI frequency doubling back on
+    SPSR |= (1 << SPI2X);
 }
 
 void mp3_wait()
