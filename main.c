@@ -10,11 +10,11 @@
 #include "mp3.h"
 #include "sd.h"
 
-void show_volume()
+void show_volume(bool bright)
 {
     for (int i=0; i < 8; ++i)
     {
-        if (i + 1 <= mp3_volume)    LED_brightness(i, 4);
+        if (i + 1 <= mp3_volume)    LED_brightness(i, bright ? 4 : 2);
         else                        LED_brightness(i, 0);
     }
 }
@@ -33,8 +33,12 @@ int main()
 
     uint8_t buffer[MP3_BUFFER_SIZE];
     bool buffer_empty = true;
+    bool playing = false;
+    bool scrolled = false;
 
-    show_volume();
+    show_volume(playing);
+
+    bool switch_status = encoder_switch;
 
     while (1)
     {
@@ -48,14 +52,26 @@ int main()
             buffer_empty = false;
         }
 
-        if (mp3_wants_data())
+        if (mp3_wants_data() && playing)
         {
             mp3_send_data(buffer);
             buffer_empty = true;
         }
 
+        // Handle wheel + button interactions
         const int e = encoder;
         const bool s = encoder_switch;
+        bool refresh = false;
+
+        // Start or stop playing based on button press.
+        if (s != switch_status) {
+            if (s)                  scrolled = false;
+            else if (!scrolled)     playing = !playing;
+            switch_status = s;
+            refresh = true;
+        }
+
+        // Adjust volume or go back and forward in track list.
         if (e)
         {
             // Set encoder's recorded value to 0
@@ -73,8 +89,10 @@ int main()
                 if (s)  sd_prev_song();
                 else    mp3_volume_down();
             }
-
-            show_volume();
+            refresh = true;
+            scrolled = true;
         }
+
+        if (refresh)    show_volume(playing);
     }
 }
