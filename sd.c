@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <util/delay.h>
+
 #include "sd.h"
 
 #include "sd-reader/sd_raw.h"
@@ -14,13 +16,28 @@ struct fat_dir_struct* root = NULL;
 struct fat_dir_entry_struct file_dir;
 struct fat_file_struct* file = NULL;
 
-bool has_songs = false;
+unsigned song_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline bool sd_has_extension_mp3(struct fat_dir_entry_struct f)
 {
     return !strcmp("mp3", f.long_name + strlen(f.long_name) - 3);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void count_songs()
+{
+    song_count = 0;
+
+    // Search through the memory card to make sure that there's at least
+    // one file ending in "mp3".
+    fat_reset_dir(root);
+    while(fat_read_dir(root, &file_dir))
+    {
+        if (sd_has_extension_mp3(file_dir))     song_count++;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,27 +68,19 @@ int sd_init()
     fat_get_dir_entry_of_path(fs, "/", &root_dir);
     root = fat_open_dir(fs, &root_dir);
 
-    // Search through the memory card to make sure that there's at least
-    // one file ending in "mp3".
-    while(fat_read_dir(root, &file_dir))
-    {
-        if (sd_has_extension_mp3(file_dir))
-        {
-            has_songs = true;
-            break;
-        }
-    }
-
+    count_songs();
     sd_next_song();
 
     return 1;
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void sd_next_song()
 {
-    if (!has_songs)     return;
+    if (!song_count)     return;
 
     if (file)   fat_close_file(file);
     file = NULL;
@@ -101,27 +110,14 @@ void sd_next_song()
 
 void sd_prev_song()
 {
-    if (!has_songs)     return;
+    if (!song_count)     return;
 
-    if (file)   fat_close_file(file);
-    file = NULL;
-
-    const struct fat_dir_entry_struct current_song = file_dir;
-
-    // Loop until the next song is our current song.
-    while (1)
+    for (int i=0; i < song_count - 1; ++i)
     {
-        const struct fat_dir_entry_struct prev = file_dir;
         sd_next_song();
-        if (strcmp(file_dir.long_name, current_song.long_name) == 0 &&
-            file_dir.file_size == current_song.file_size)
-        {
-            file_dir = prev;
-            break;
-        }
     }
 
-    file = fat_open_file(fs, &file_dir);
+    printf("Gone back to file: %s\n", file_dir.long_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
