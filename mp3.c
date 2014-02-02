@@ -4,6 +4,8 @@
 #include "mp3.h"
 #include "macros.h"
 
+int mp3_volume = 8;
+
 void mp3_write(const uint8_t addr, const uint16_t data);
 
 int mp3_init()
@@ -134,4 +136,26 @@ void mp3_write(const uint8_t addr, const uint16_t data)
     mp3_spi_send(data & 0xff);
 
     mp3_deselect();
+}
+
+
+void mp3_volume_up()
+{
+    const uint16_t vol = mp3_read(0xb) & 0xff;
+    if (vol >= 10)
+    {
+        mp3_write(0xb, ((vol - 10) << 8) | ((vol - 10) & 0xff));
+        mp3_volume++;
+    }
+}
+
+
+void mp3_volume_down()
+{
+    const uint8_t vol = mp3_read(0xb) & 0xff;
+    if (vol <= 60)
+    {
+        mp3_write(0xb, ((vol + 10) << 8) | ((vol + 10) & 0xff));
+        mp3_volume--;
+    }
 }

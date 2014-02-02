@@ -10,6 +10,14 @@
 #include "mp3.h"
 #include "sd.h"
 
+void show_volume()
+{
+    for (int i=0; i < 8; ++i)
+    {
+        if (i + 1 <= mp3_volume)    LED_brightness(i, 4);
+        else                        LED_brightness(i, 0);
+    }
+}
 
 int main()
 {
@@ -24,7 +32,10 @@ int main()
     if (mp3_init()) { printf("VS1003  initialized!\n"); }
 
     uint8_t buffer[MP3_BUFFER_SIZE];
-    int buffer_empty = true;
+    bool buffer_empty = true;
+
+    show_volume();
+
     while (1)
     {
         if (buffer_empty) {
@@ -41,6 +52,29 @@ int main()
         {
             mp3_send_data(buffer);
             buffer_empty = true;
+        }
+
+        const int e = encoder;
+        const bool s = encoder_switch;
+        if (e)
+        {
+            // Set encoder's recorded value to 0
+            cli();
+            encoder = 0;
+            sei();
+
+            if (e > 0)
+            {
+                if (s)  sd_next_song();
+                else    mp3_volume_up();
+            }
+            else
+            {
+                if (s)  sd_prev_song();
+                else    mp3_volume_down();
+            }
+
+            show_volume();
         }
     }
 }

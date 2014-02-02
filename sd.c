@@ -14,6 +14,17 @@ struct fat_dir_struct* root = NULL;
 struct fat_dir_entry_struct file_dir;
 struct fat_file_struct* file = NULL;
 
+bool has_songs = false;
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool has_extension_mp3(struct fat_dir_entry_struct f)
+{
+    return !strcmp("mp3", f.long_name + strlen(f.long_name) - 3);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 int sd_init()
 {
     if (!sd_raw_init()) {
@@ -40,34 +51,43 @@ int sd_init()
     fat_get_dir_entry_of_path(fs, "/", &root_dir);
     root = fat_open_dir(fs, &root_dir);
 
+    // Search through the memory card to make sure that there's at least
+    // one file ending in "mp3".
+    while(fat_read_dir(root, &file_dir))
+    {
+        if (has_extension_mp3(file_dir))
+        {
+            has_songs = true;
+            break;
+        }
+    }
+
     sd_next_song();
 
     return 1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void sd_next_song()
 {
-    // Flag to prevent infinite loop if we don't have any .mp3 files
-    int reset_already = 0;
+    if (!has_songs)     return;
+
+    if (file)   fat_close_file(file);
+    file = NULL;
 
     while (1)
     {
+        printf("Current file: %s\n", file_dir.long_name);
+
         // If we've reached the last file, reset the directory
         if (!fat_read_dir(root, &file_dir))
         {
             fat_reset_dir(root);
-
-            // Don't loop forever if we've got no .mp3 files
-            if (reset_already)  return;
-
-            // Set this flag so that if we get here again we abort.
-            reset_already = 1;
         }
 
         // Check to see if this directory entry has mp3 as its extension
-        else if (!strcmp(
-                    "mp3", file_dir.long_name +
-                           strlen(file_dir.long_name) - 3))
+        else if (has_extension_mp3(file_dir))
         {
             break;
         }
@@ -75,6 +95,35 @@ void sd_next_song()
 
     file = fat_open_file(fs, &file_dir);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void sd_prev_song()
+{
+    if (!has_songs)     return;
+
+    if (file)   fat_close_file(file);
+    file = NULL;
+
+    const struct fat_dir_entry_struct current_song = file_dir;
+
+    // Loop until the next song is our current song.
+    while (1)
+    {
+        const struct fat_dir_entry_struct prev = file_dir;
+        sd_next_song();
+        if (strcmp(file_dir.long_name, current_song.long_name) == 0 &&
+            file_dir.file_size == current_song.file_size)
+        {
+            file_dir = prev;
+            break;
+        }
+    }
+
+    file = fat_open_file(fs, &file_dir);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool sd_get_data(uint8_t* buffer, uintptr_t amount)
 {

@@ -10,6 +10,11 @@ uint8_t levels[8] = {
     0, 10, 20, 35, 55, 80, 110, 145
 };
 
+void LED_brightness(uint8_t index, uint8_t value)
+{
+    brightness[index] = value;
+}
+
 void LEDs_init()
 {
     OUTPUT(DDRD, PD4);  // SHCP (shift register clock input)
@@ -24,10 +29,7 @@ void LEDs_init()
 
     SET(TCCR0B, CS02); // 256x prescalar
 
-    for (int i=0; i < 8; ++i)
-    {
-        brightness[i] = (i > 6) ? 6 : i;
-    }
+    for (int i=0; i < 8; ++i)   brightness[i] = 0;
 }
 
 void update_LEDs()
