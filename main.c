@@ -10,13 +10,53 @@
 #include "mp3.h"
 #include "sd.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
 void show_volume(bool bright)
 {
     for (int i=0; i < 8; ++i)
     {
-        if (i + 1 <= mp3_volume)    LED_brightness(i, bright ? 4 : 2);
-        else                        LED_brightness(i, 0);
+        if (i + 1 <= mp3_volume)    LEDs[i] = bright ? 4 : 2;
+        else                        LEDs[i] = 0;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void animate_next()
+{
+    uint8_t buffer[24];
+    for (int i=0; i < 8; ++i)
+    {
+        buffer[i] = LEDs[i];
+        buffer[i + 8] = 0;
+        buffer[i + 16] = LEDs[i];
+    }
+
+    for (int i=0; i < 16; ++i)
+    {
+        for (int j=0; j < 8; ++j)   LEDs[j] = buffer[i+j];
+        _delay_ms(20);
+    }
+    sd_next_song();
+}
+
+void animate_prev()
+{
+    uint8_t buffer[24];
+    for (int i=0; i < 8; ++i)
+    {
+        buffer[i] = LEDs[i];
+        buffer[i + 8] = 0;
+        buffer[i + 16] = LEDs[i];
+    }
+
+    for (int i=15; i >= 0; --i)
+    {
+        for (int j=0; j < 8; ++j)   LEDs[j] = buffer[i+j];
+        _delay_ms(20);
+    }
+    sd_prev_song();
 }
 
 int main()
@@ -81,12 +121,12 @@ int main()
 
             if (e > 0)
             {
-                if (s)  sd_next_song();
+                if (s)  animate_next();
                 else    mp3_volume_up();
             }
             else
             {
-                if (s)  sd_prev_song();
+                if (s)  animate_prev();
                 else    mp3_volume_down();
             }
             refresh = true;

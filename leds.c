@@ -4,16 +4,11 @@
 #include "leds.h"
 #include "macros.h"
 
-uint8_t brightness[8];      // Values from 0 to 7, with 7 being brightest
+uint8_t LEDs[8];      // Values from 0 to 7, with 7 being brightest
 volatile uint8_t tick = 0;  // Goes from 0 to 7.
 uint8_t levels[8] = {
     0, 10, 20, 35, 55, 80, 110, 145
 };
-
-void LED_brightness(uint8_t index, uint8_t value)
-{
-    brightness[index] = value;
-}
 
 void LEDs_init()
 {
@@ -29,14 +24,14 @@ void LEDs_init()
 
     SET(TCCR0B, CS02); // 256x prescalar
 
-    for (int i=0; i < 8; ++i)   brightness[i] = 0;
+    for (int i=0; i < 8; ++i)   LEDs[i] = 0;
 }
 
 void update_LEDs()
 {
     for (int i=0; i < 8; ++i)
     {
-        if (brightness[i] > tick) {
+        if (LEDs[i] > tick) {
             SET(PORTB, PB4);
         } else {
             CLEAR(PORTB, PB4);

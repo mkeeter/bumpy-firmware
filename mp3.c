@@ -4,9 +4,10 @@
 #include "mp3.h"
 #include "macros.h"
 
-int mp3_volume = 8;
+int mp3_volume = 5;
 
 void mp3_write(const uint8_t addr, const uint16_t data);
+static void mp3_write_volume();
 
 int mp3_init()
 {
@@ -41,6 +42,8 @@ int mp3_init()
         printf("Error: Unexpected VS1003ds version (%i)", version);
         return 0;
     }
+
+    mp3_write_volume();
 
     return 1;
 }
@@ -139,7 +142,7 @@ void mp3_write(const uint8_t addr, const uint16_t data)
 }
 
 
-void mp3_write_volume()
+static void mp3_write_volume()
 {
     uint16_t v = 10*(8 - mp3_volume);
     mp3_write(0xb, (v << 8) | v);

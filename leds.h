@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+extern uint8_t LEDs[8];
 void LED_brightness(uint8_t index, uint8_t value);
 void LEDs_init();
 
