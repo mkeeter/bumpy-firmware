@@ -9,6 +9,7 @@
 #include "leds.h"
 #include "mp3.h"
 #include "sd.h"
+#include "tenths.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +20,12 @@ void show_volume(bool bright)
         if (i + 1 <= mp3_volume)    LEDs[i] = bright ? 4 : 2;
         else                        LEDs[i] = 0;
     }
+}
+
+void clear_volume()
+{
+    for (int i=0; i < 7; ++i)   LEDs[i] = 0;
+    LEDs[7] = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +71,7 @@ int main()
     LEDs_init();
     encoder_init();
     serial_init();
+    tenths_init();
     sei();
 
     printf("Booting up...\n");
@@ -76,9 +84,13 @@ int main()
     bool playing = false;
     bool scrolled = false;
 
+    bool sleeping = false;
+    bool just_slept = false;
+
     show_volume(playing);
 
     bool switch_status = encoder_switch;
+    unsigned time = tenths;
 
     while (1)
     {
@@ -105,11 +117,47 @@ int main()
 
         // Start or stop playing based on button press.
         if (s != switch_status) {
-            if (s)                  scrolled = false;
-            else if (!scrolled)     playing = !playing;
+            if (s)
+            {
+                // Reset the variable that tracks whether we've scrolled
+                scrolled = false;
+
+                // Keep track of when this button was pressed
+                // (because we go into sleep mode after 5 seconds)
+                if (!sleeping)      time = tenths;
+            }
+
+            // Handle button release with no scrolling.
+            else if (!scrolled)
+            {
+                // Look for a double-tap within 0.5 seconds
+                // to wake up from sleep mode.
+                if (sleeping)
+                {
+                    if (tenths - time < 5)      sleeping = false;
+                    else if (!just_slept)       time = tenths;
+                    just_slept = false;
+                }
+
+                // Otherwise, a single tap toggles play/pause
+                else
+                {
+                    playing = !playing;
+                }
+            }
+
             switch_status = s;
             refresh = true;
         }
+
+        // If the button is held for 5 seconds, switch to sleep mode.
+        if (switch_status && !sleeping && !scrolled && tenths - time >= 50)
+        {
+            sleeping = true;
+            refresh = true;
+            just_slept = true;
+        }
+
 
         // Adjust volume or go back and forward in track list.
         if (e)
@@ -119,12 +167,12 @@ int main()
             encoder = 0;
             sei();
 
-            if (e > 0)
+            if (e > 0 && !sleeping)
             {
                 if (s)  animate_next();
                 else    mp3_volume_up();
             }
-            else
+            else if (e < 0 && !sleeping)
             {
                 if (s)  animate_prev();
                 else    mp3_volume_down();
@@ -133,6 +181,10 @@ int main()
             scrolled = true;
         }
 
-        if (refresh)    show_volume(playing);
+        if (refresh)
+        {
+            if (sleeping)   clear_volume();
+            else            show_volume(playing);
+        }
     }
 }
