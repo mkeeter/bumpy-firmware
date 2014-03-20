@@ -68,9 +68,6 @@ void animate_prev()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef void (*f_ptr_t)(void);
-f_ptr_t start_bootloader = (f_ptr_t)0x3800;
-
 int main()
 {
     LEDs_init();
@@ -91,7 +88,7 @@ int main()
             _delay_ms(200);
         }
         cli();
-        start_bootloader();
+        __asm("jmp 0x3800");
     }
 
 
