@@ -27,6 +27,6 @@ fuse:
 dfu: programmed
 	touch programmed
 	dfu-programmer $(MMCU) erase
-	dfu-programmer $(MMCU) flash $(HEX)
+	dfu-programmer $(MMCU) flash --suppress-bootloader-mem $(HEX)
 
 programmed: $(HEX)
