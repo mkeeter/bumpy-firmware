@@ -6,6 +6,11 @@
 
 volatile int encoder=0;
 
+void encoder_bootloader_check()
+{
+    PORTB |= (1 << PB6); // encoder switch pull-up
+}
+
 void encoder_init()
 {
     // Set internal pull-ups to on
@@ -13,11 +18,20 @@ void encoder_init()
     PORTB |= (1 << PB6); // encoder switch
     PORTC |= (1 << PC6); // encoder A
 
+    if (encoder_switch)     __asm("jmp 0x7000");
+
     // Encoder B is on the pin corresponding to PCINT11,
     // so we'll enable pin change interrupt 1 with the correct
     // mask register value.
     PCICR |= (1 << PCIE0);
     PCMSK0 |= (1 << PCINT5);
+}
+
+void encoder_clear()
+{
+    cli();
+    encoder = 0;
+    sei();
 }
 
 ISR(PCINT0_vect)

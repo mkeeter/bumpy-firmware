@@ -9,6 +9,7 @@
 extern volatile int encoder;
 #define encoder_switch (!(PINB & (1 << PB6)))
 
+void encoder_bootloader_check();
 void encoder_init();
-
+void encoder_clear();
 #endif

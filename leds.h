@@ -2,9 +2,13 @@
 #define LEDS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 extern uint8_t LEDs[8];
-void LED_brightness(uint8_t index, uint8_t value);
 void LEDs_init();
+void LEDs_volume(bool bright, uint8_t volume);
+void LEDs_sleep();
+void LEDs_next();
+void LEDs_prev();
 
 #endif
