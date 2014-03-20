@@ -66,8 +66,17 @@ void animate_prev()
     sd_prev_song();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 int main()
 {
+    // If the encoder switch is pressed on startup, jump to DFU bootloader.
+    PORTB |= (1 << PB6); // turn on encoder switch pull-up
+    if (encoder_switch)
+    {
+        __asm("jmp 0x7000");
+    }
+
     LEDs_init();
     encoder_init();
     serial_init();
