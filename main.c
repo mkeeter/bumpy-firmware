@@ -70,27 +70,18 @@ void animate_prev()
 
 int main()
 {
+    // If the encoder switch is pressed on startup, jump to DFU bootloader.
+    PORTB |= (1 << PB6); // turn on encoder switch pull-up
+    if (encoder_switch)
+    {
+        __asm("jmp 0x7000");
+    }
+
     LEDs_init();
     encoder_init();
     serial_init();
     tenths_init();
     sei();
-
-    // If the encoder switch is pressed on startup, jump to DFU bootloader.
-    if (encoder_switch)
-    {
-        printf("Jumping to bootloader!\n");
-        for (int i=0; i < 4; ++i)
-        {
-            for (int j=0; j < 8; ++j)   LEDs[j] = 8;
-            _delay_ms(200);
-            for (int j=0; j < 8; ++j)   LEDs[j] = 0;
-            _delay_ms(200);
-        }
-        cli();
-        __asm("jmp 0x3800");
-    }
-
 
     printf("Booting up...\n");
 
