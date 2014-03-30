@@ -8,11 +8,12 @@
 struct Buffer buffer;
 struct PlayerState player_state;
 
-
 void player_manage_buffer()
 {
     if (buffer.empty)
     {
+        // Copy data from the SD card into our local the buffer.
+        // If we're out of data, skip to the next song.
         while (!sd_get_data(buffer.data, MP3_BUFFER_SIZE))
         {
             sd_next_song();
@@ -20,6 +21,7 @@ void player_manage_buffer()
     }
     buffer.empty = false;
 
+    // Move data from our buffer to the mp3 decoder's buffer.
     if (mp3_wants_data() && player_state.playing)
     {
         mp3_send_data(buffer.data);
