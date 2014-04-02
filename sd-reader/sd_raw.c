@@ -160,7 +160,7 @@ static uint8_t sd_raw_card_type;
 
 /* private helper functions */
 static void sd_raw_send_byte(uint8_t b);
-static uint8_t sd_raw_rec_byte();
+static uint8_t sd_raw_rec_byte(void);
 static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
 
 /**
@@ -169,7 +169,7 @@ static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
  *
  * \returns 0 on failure, 1 on success.
  */
-uint8_t sd_raw_init()
+uint8_t sd_raw_init(void)
 {
     /* enable inputs for reading card status */
     configure_pin_available();
@@ -336,7 +336,7 @@ uint8_t sd_raw_init()
  *
  * \returns 1 if the card is available, 0 if it is not.
  */
-uint8_t sd_raw_available()
+uint8_t sd_raw_available(void)
 {
     return get_pin_available() != 0x00;
 }
@@ -347,7 +347,7 @@ uint8_t sd_raw_available()
  *
  * \returns 1 if the card is locked, 0 if it is not.
  */
-uint8_t sd_raw_locked()
+uint8_t sd_raw_locked(void)
 {
     return get_pin_locked() == 0x00;
 }
@@ -374,7 +374,7 @@ void sd_raw_send_byte(uint8_t b)
  * \returns The byte which should be read.
  * \see sd_raw_send_byte
  */
-uint8_t sd_raw_rec_byte()
+uint8_t sd_raw_rec_byte(void)
 {
     /* send dummy data for receiving some */
     SPDR = 0xff;
