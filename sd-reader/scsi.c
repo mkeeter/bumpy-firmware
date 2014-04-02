@@ -1,12 +1,7 @@
 /*
-             LUFA Library
-     Copyright (C) Dean Camera, 2014.
+  Based on code from the LUFA Library, with the following
+  copyright information:
 
-  dean [at] fourwalledcubicle [dot] com
-           www.lufa-lib.org
-*/
-
-/*
   Copyright 2014  Dean Camera (dean [at] fourwalledcubicle [dot] com)
 
   Permission to use, copy, modify, distribute, and sell this
@@ -35,8 +30,15 @@
  *  which wrap around standard SCSI device commands for controlling the actual storage medium.
  */
 
-#define  INCLUDE_FROM_SCSI_C
 #include "SCSI.h"
+
+static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
+static bool SCSI_Command_Request_Sense(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
+static bool SCSI_Command_Read_Capacity_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
+static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
+static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
+                                      const bool IsDataRead);
+static bool SCSI_Command_ModeSense_6(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
 
 /** Structure to hold the SCSI response data to a SCSI INQUIRY command. This gives information about the device's
  *  features and capabilities.
@@ -65,8 +67,8 @@ static const SCSI_Inquiry_Response_t InquiryData =
     .WideBus32Bit        = false,
     .RelAddr             = false,
 
-    .VendorID            = "LUFA",
-    .ProductID           = "Dataflash Disk",
+    .VendorID            = "MJK",
+    .ProductID           = "Bumpy",
     .RevisionID          = {'0','.','0','0'},
 };
 
@@ -249,7 +251,7 @@ static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInte
     }
 
     /* Check to see if all attached Dataflash ICs are functional */
-    if (!(DataflashManager_CheckDataflashOperation()))
+    if (0/*!(DataflashManager_CheckDataflashOperation())*/)
     {
         /* Update SENSE key with a hardware error condition and return command fail */
         SCSI_SET_SENSE(SCSI_SENSE_KEY_HARDWARE_ERROR,
@@ -308,16 +310,14 @@ static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfa
         return false;
     }
 
-    #if (TOTAL_LUNS > 1)
-    /* Adjust the given block address to the real media address based on the selected LUN */
-    BlockAddress += ((uint32_t)MSInterfaceInfo->State.CommandBlock.LUN * LUN_MEDIA_BLOCKS);
-    #endif
-
     /* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
+
+    /*
     if (IsDataRead == DATA_READ)
       DataflashManager_ReadBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
     else
       DataflashManager_WriteBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
+    */
 
     /* Update the bytes transferred counter and succeed the command */
     MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks * VIRTUAL_MEMORY_BLOCK_SIZE);

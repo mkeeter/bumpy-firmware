@@ -1,12 +1,7 @@
 /*
-             LUFA Library
-     Copyright (C) Dean Camera, 2014.
+  Based on code from the LUFA Library, with the following
+  copyright information:
 
-  dean [at] fourwalledcubicle [dot] com
-           www.lufa-lib.org
-*/
-
-/*
   Copyright 2014  Dean Camera (dean [at] fourwalledcubicle [dot] com)
 
   Permission to use, copy, modify, distribute, and sell this
@@ -42,10 +37,30 @@
 
 #include <LUFA/Drivers/USB/USB.h>
 
-#include "../MassStorage.h"
-#include "../Descriptors.h"
-#include "DataflashManager.h"
-#include "Config/AppConfig.h"
+/*****************************************************************************/
+
+/* Configuration */
+#define TOTAL_LUNS      1
+
+/** Total number of bytes of the storage medium, comprised of one 8 GB microSD card. */
+#define VIRTUAL_MEMORY_BYTES                ((uint32_t)0x200000000)
+
+/** Block size of the device. This is kept at 512 to remain compatible with the OS despite the underlying
+ *  storage media (Dataflash) using a different native block size. Do not change this value.
+ */
+#define VIRTUAL_MEMORY_BLOCK_SIZE           512
+
+/** Total number of blocks of the virtual memory for reporting to the host as the device's total capacity. Do not
+ *  change this value; change VIRTUAL_MEMORY_BYTES instead to alter the media size.
+ */
+#define VIRTUAL_MEMORY_BLOCKS               (VIRTUAL_MEMORY_BYTES / VIRTUAL_MEMORY_BLOCK_SIZE)
+
+/** Blocks in each LUN, calculated from the total capacity divided by the total number of Logical Units in the device. */
+#define LUN_MEDIA_BLOCKS                    (VIRTUAL_MEMORY_BLOCKS / TOTAL_LUNS)
+
+#define DISK_READ_ONLY  false
+
+/*****************************************************************************/
 
 /* Macros: */
 /** Macro to set the current SCSI sense data to the given key, additional sense code and additional sense qualifier. This
@@ -75,15 +90,4 @@
 /* Function Prototypes: */
 bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
 
-#if defined(INCLUDE_FROM_SCSI_C)
-static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
-static bool SCSI_Command_Request_Sense(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
-static bool SCSI_Command_Read_Capacity_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
-static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
-static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
-                                      const bool IsDataRead);
-static bool SCSI_Command_ModeSense_6(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
-endif
-
 #endif
-
