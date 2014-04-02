@@ -1,32 +1,24 @@
-HEX=fw.hex
-OUT=fw.obj
-
-MMCU=atmega32u4
+MCU = atmega32u4
+ARCH = AVR8
 F_CPU = 8000000
+F_USB = $(F_CPU)
+OPTIMIZATION = s
+TARGET = fw
+SRC = encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
+	  sd-reader/byteordering.c sd-reader/fat.c sd-reader/partition.c sd-reader/sd_raw.c
 
-CFLAGS=-mmcu=$(MMCU) -Wall -Os -DF_CPU=$(F_CPU) -std=c99
+LUFA_PATH = lufa/LUFA
 
-$(HEX): $(OUT)
-	avr-objcopy -O ihex $(OUT) $(HEX)
-	avr-size --mcu=$(MMCU) --format=avr $(OUT)
+all:
 
-$(OUT): $(OBJECTS) *.c *.h sd-reader/*.c sd-reader/*.h
-	avr-gcc $(CFLAGS) -o $(OUT) *.c sd-reader/*.c
+include $(LUFA_PATH)/Build/lufa_core.mk
+include $(LUFA_PATH)/Build/lufa_sources.mk
+include $(LUFA_PATH)/Build/lufa_build.mk
 
-clean:
-	rm $(OUT) $(HEX)
-################################################################################
-
-program: programmed
+dfu: all
 	touch programmed
-	avrdude -p $(MMCU) -c usbtiny -U flash:w:$(HEX)
+	dfu-programmer $(MCU) erase
+	dfu-programmer $(MCU) flash --suppress-bootloader-mem $(TARGET).hex
 
 fuse:
-	avrdude -p $(MMCU) -c usbtiny -U lfuse:w:0xde:m -U hfuse:w:0xd9:m -U efuse:w:0xfb:m
-
-dfu: programmed
-	touch programmed
-	dfu-programmer $(MMCU) erase
-	dfu-programmer $(MMCU) flash --suppress-bootloader-mem $(HEX)
-
-programmed: $(HEX)
+	avrdude -p $(MCU) -c usbtiny -U lfuse:w:0xde:m -U hfuse:w:0xd9:m -U efuse:w:0xfb:m
