@@ -9,6 +9,7 @@ volatile int encoder=0;
 void encoder_bootloader_check()
 {
     PORTB |= (1 << PB6); // encoder switch pull-up
+    if (encoder_switch)     __asm("jmp 0x7000");
 }
 
 void encoder_init()
@@ -17,8 +18,6 @@ void encoder_init()
     PORTB |= (1 << PB5); // encoder B
     PORTB |= (1 << PB6); // encoder switch
     PORTC |= (1 << PC6); // encoder A
-
-    if (encoder_switch)     __asm("jmp 0x7000");
 
     // Encoder B is on the pin corresponding to PCINT11,
     // so we'll enable pin change interrupt 1 with the correct
