@@ -6,9 +6,9 @@
 
 // Initializes the SD filesystem.
 // Returns 1 if success, 0 otherwise.
-int sd_init();
-void sd_next_song();
-void sd_prev_song();
+int sd_init(void);
+void sd_next_song(void);
+void sd_prev_song(void);
 
 bool sd_get_data(uint8_t* buffer, uintptr_t amount);
 

@@ -27,7 +27,7 @@ static inline bool sd_has_extension_mp3(struct fat_dir_entry_struct f)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void count_songs()
+static void count_songs(void)
 {
     song_count = 0;
 
@@ -42,7 +42,7 @@ static void count_songs()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int sd_init()
+int sd_init(void)
 {
     if (!sd_raw_init()) {
         printf("Error: sd_raw_init failed\n");
@@ -78,7 +78,7 @@ int sd_init()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void sd_next_song()
+void sd_next_song(void)
 {
     if (!song_count)     return;
 
@@ -108,7 +108,7 @@ void sd_next_song()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void sd_prev_song()
+void sd_prev_song(void)
 {
     if (!song_count)     return;
 

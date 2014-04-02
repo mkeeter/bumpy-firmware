@@ -79,7 +79,7 @@ uint8_t levels[8] = {
     0, 10, 20, 35, 55, 80, 110, 145
 };
 
-void update_LEDs()
+void update_LEDs(void)
 {
     for (int i=0; i < 8; ++i)
     {

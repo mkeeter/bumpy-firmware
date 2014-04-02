@@ -8,7 +8,7 @@
 struct Buffer buffer;
 struct PlayerState player_state;
 
-void player_manage_buffer()
+void player_manage_buffer(void)
 {
     if (buffer.empty)
     {
@@ -32,7 +32,7 @@ void player_manage_buffer()
 ////////////////////////////////////////////////////////////////////////////////
 
 // Redraws LEDs based on player state
-static void player_redraw()
+static void player_redraw(void)
 {
     if (player_state.sleeping)
         LEDs_sleep();
@@ -43,7 +43,7 @@ static void player_redraw()
 ////////////////////////////////////////////////////////////////////////////////
 
 // Check if we should wake from sleep mode by detecting double-tap
-static void player_check_wake()
+static void player_check_wake(void)
 {
     // Look for a double-tap to detect wake-up.
     if (player_state.sleeping && tenths - player_state.button_time < 5) {
@@ -54,7 +54,7 @@ static void player_check_wake()
 }
 
 // On button press, check if we should wake up from sleep mode.
-static void player_button_pressed()
+static void player_button_pressed(void)
 {
     // Reset the variable that tracks whether we've scrolled
     player_state.scrolled = false;
@@ -70,7 +70,7 @@ static void player_button_pressed()
 
 
 // On button release, switch play/pause unless we've scrolled
-static void player_button_released()
+static void player_button_released(void)
 {
     // If we've scrolled, then button release doesn't matter.
     // Otherwise, a single tap toggles play/pause
@@ -83,7 +83,7 @@ static void player_button_released()
 
 
 // Check to see if we should enter sleep mode.
-static void player_check_sleep()
+static void player_check_sleep(void)
 {
     if (player_state.button_down && !player_state.sleeping &&
        !player_state.scrolled && tenths - player_state.button_time >= 50)
@@ -95,34 +95,34 @@ static void player_check_sleep()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void player_animate_next()
+static void player_animate_next(void)
 {
     LEDs_next();
     sd_next_song();
     player_redraw();
 }
 
-static void player_animate_prev()
+static void player_animate_prev(void)
 {
     LEDs_prev();
     sd_prev_song();
     player_redraw();
 }
 
-static void player_volume_up()
+static void player_volume_up(void)
 {
     mp3_volume_up();
     player_redraw();
 }
 
-static void player_volume_down()
+static void player_volume_down(void)
 {
     mp3_volume_down();
     player_redraw();
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void player_update_state()
+void player_update_state(void)
 {
     bool button_down = encoder_switch;
 
@@ -154,7 +154,7 @@ void player_update_state()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void player_init()
+void player_init(void)
 {
     buffer.empty = true;
     player_state.playing = false;

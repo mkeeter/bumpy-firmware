@@ -7,9 +7,9 @@
 int mp3_volume = 5;
 
 void mp3_write(const uint8_t addr, const uint16_t data);
-static void mp3_write_volume();
+static void mp3_write_volume(void);
 
-int mp3_init()
+int mp3_init(void)
 {
     // MP3 chip select
     OUTPUT(DDRF, PF4);
@@ -48,28 +48,28 @@ int mp3_init()
     return 1;
 }
 
-static inline void mp3_select()
+static inline void mp3_select(void)
 {
     CLEAR(PORTF, PF4);
 }
 
-static inline void mp3_deselect()
+static inline void mp3_deselect(void)
 {
     SET(PORTF, PF4);
 }
 
-static inline void mp3_data_select()
+static inline void mp3_data_select(void)
 {
     CLEAR(PORTF, PF1);
 }
 
-static inline void mp3_data_deselect()
+static inline void mp3_data_deselect(void)
 {
     SET(PORTF, PF1);
 }
 
 // Checks DREQ line and returns True if it's high
-inline bool mp3_wants_data()
+inline bool mp3_wants_data(void)
 {
     return PINF & (1 << PF6);
 }
@@ -99,7 +99,7 @@ void mp3_send_data(uint8_t* buffer)
 
 }
 
-static inline void mp3_wait()
+static inline void mp3_wait(void)
 {
     // Wait for DREQ to go high (signaling that the mp3 chip
     // can take in an SPI command).
@@ -142,13 +142,13 @@ void mp3_write(const uint8_t addr, const uint16_t data)
 }
 
 
-static void mp3_write_volume()
+static void mp3_write_volume(void)
 {
     uint16_t v = 10*(8 - mp3_volume);
     mp3_write(0xb, (v << 8) | v);
 }
 
-void mp3_volume_up()
+void mp3_volume_up(void)
 {
     if (mp3_volume < 8)
     {
@@ -158,7 +158,7 @@ void mp3_volume_up()
 }
 
 
-void mp3_volume_down()
+void mp3_volume_down(void)
 {
     if (mp3_volume > 1)
     {
