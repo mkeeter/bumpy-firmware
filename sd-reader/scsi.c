@@ -315,12 +315,10 @@ static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfa
 
     /* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
 
-    /*
     if (IsDataRead == DATA_READ)
-      DataflashManager_ReadBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
+        sd_read_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
     else
-      DataflashManager_WriteBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
-    */
+        sd_write_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
 
     /* Update the bytes transferred counter and succeed the command */
     MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks * VIRTUAL_MEMORY_BLOCK_SIZE);
@@ -349,4 +347,5 @@ static bool SCSI_Command_ModeSense_6(USB_ClassInfo_MS_Device_t* const MSInterfac
 
     return true;
 }
+
 
