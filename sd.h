@@ -12,4 +12,8 @@ void sd_prev_song(void);
 
 bool sd_get_data(uint8_t* buffer, uintptr_t amount);
 
+/** Checks to see if the SD card is properly initialized.
+ */
+bool sd_check(void);
+
 #endif

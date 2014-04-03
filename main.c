@@ -14,7 +14,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main()
+int main(void)
 {
     // If the encoder switch is pressed on startup, jump to DFU bootloader.
     encoder_bootloader_check();

@@ -30,8 +30,10 @@
  *  which wrap around standard SCSI device commands for controlling the actual storage medium.
  */
 
-#include "SCSI.h"
+#include "scsi.h"
+#include "sd.h"
 
+/* Forward declarations */
 static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
 static bool SCSI_Command_Request_Sense(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
 static bool SCSI_Command_Read_Capacity_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
@@ -39,6 +41,7 @@ static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInte
 static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                                       const bool IsDataRead);
 static bool SCSI_Command_ModeSense_6(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
+
 
 /** Structure to hold the SCSI response data to a SCSI INQUIRY command. This gives information about the device's
  *  features and capabilities.
@@ -251,7 +254,7 @@ static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInte
     }
 
     /* Check to see if all attached Dataflash ICs are functional */
-    if (0/*!(DataflashManager_CheckDataflashOperation())*/)
+    if (!sd_check())
     {
         /* Update SENSE key with a hardware error condition and return command fail */
         SCSI_SET_SENSE(SCSI_SENSE_KEY_HARDWARE_ERROR,
