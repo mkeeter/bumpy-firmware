@@ -4,11 +4,12 @@ F_CPU = 8000000
 F_USB = $(F_CPU)
 OPTIMIZATION = s
 TARGET = fw
-SRC = encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
+SRC = descriptors.c encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
 	  sd-reader/byteordering.c sd-reader/fat.c sd-reader/partition.c \
 	  sd-reader/sd_raw.c sd-reader/scsi.c sd-reader/sd_manager.c
 
 LUFA_PATH = lufa/LUFA
+CC_FLAGS = -DUSE_LUFA_CONFIG_HEADER -IConfig/
 
 all:
 
