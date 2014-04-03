@@ -32,6 +32,7 @@
 
 #include "scsi.h"
 #include "sd.h"
+#include "sd_manager.h"
 
 /* Forward declarations */
 static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
