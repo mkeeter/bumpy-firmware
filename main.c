@@ -7,6 +7,7 @@
 #include "encoder.h"
 #include "serial.h"
 #include "leds.h"
+#include "mass_storage.h"
 #include "mp3.h"
 #include "sd.h"
 #include "tenths.h"
@@ -24,6 +25,8 @@ int main(void)
     LEDs_init();
     serial_init();
     tenths_init();
+
+    mass_storage_init();
     sei();
 
     printf("Booting up...\n");

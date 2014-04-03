@@ -6,10 +6,11 @@ OPTIMIZATION = s
 TARGET = fw
 SRC = descriptors.c mass_storage.c encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
 	  sd-reader/byteordering.c sd-reader/fat.c sd-reader/partition.c \
-	  sd-reader/sd_raw.c sd-reader/scsi.c sd-reader/sd_manager.c
+	  sd-reader/sd_raw.c sd-reader/scsi.c sd-reader/sd_manager.c \
+	  $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
 
 LUFA_PATH = lufa/LUFA
-CC_FLAGS = -DUSE_LUFA_CONFIG_HEADER -IConfig/
+CC_FLAGS = -DUSE_LUFA_CONFIG_HEADER
 
 all:
 
