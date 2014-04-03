@@ -29,6 +29,11 @@ int main(void)
     mass_storage_init();
     sei();
 
+    while(1)
+    {
+        usb_task();
+    }
+
     printf("Booting up...\n");
 
     if (sd_init())  { printf("SD card initialized!\n"); }
