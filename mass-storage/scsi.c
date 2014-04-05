@@ -323,7 +323,7 @@ static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfa
     }
 
     /* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
-
+    printf("%lu %u\n", BlockAddress, TotalBlocks);
     if (IsDataRead == DATA_READ)
         sd_read_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
     else

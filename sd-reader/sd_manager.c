@@ -71,14 +71,14 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
 }
 
 void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
-                    uint32_t BlockAddress, uint16_t TotalBlocks)
+                    offset_t BlockAddress, uint16_t TotalBlocks)
 {
     /* Wait until endpoint is ready before continuing */
     if (Endpoint_WaitUntilReady())
         return;
 
-    const uint32_t EndAddress = BlockAddress + TotalBlocks;
-    for (uint32_t addr = BlockAddress; addr < EndAddress; addr++)
+    const offset_t EndAddress = BlockAddress + TotalBlocks;
+    for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
         /* Read this block into the endpoint in 16-byte chunks. */
         sd_raw_read_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
@@ -135,14 +135,14 @@ static uintptr_t sd_write_block_handler(uint8_t* buffer, offset_t offset, void* 
 }
 
 void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
-                     uint32_t BlockAddress, uint16_t TotalBlocks)
+                     offset_t BlockAddress, uint16_t TotalBlocks)
 {
     /* Wait until endpoint is ready before continuing */
     if (Endpoint_WaitUntilReady())
       return;
 
-    const uint32_t EndAddress = BlockAddress + TotalBlocks;
-    for (uint32_t addr = BlockAddress; addr < EndAddress; addr++)
+    const offset_t EndAddress = BlockAddress + TotalBlocks;
+    for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
         /* Read this block into the endpoint in 16-byte chunks. */
         sd_raw_write_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
