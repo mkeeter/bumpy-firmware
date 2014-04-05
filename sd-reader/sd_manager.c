@@ -154,3 +154,11 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     if (!(Endpoint_IsReadWriteAllowed()))
       Endpoint_ClearOUT();
 }
+
+uint32_t sd_get_blocks(void)
+{
+    struct sd_raw_info info;
+    sd_raw_get_info(&info);
+
+    return info.capacity >> 9;
+}

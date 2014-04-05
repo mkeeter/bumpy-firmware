@@ -8,7 +8,7 @@
 #define BUFFER_SIZE (1 << 7) // must be a power of 2, otherwise the
 #define BUFFER_MASK (BUFFER_SIZE - 1) // masking won't work.
 
-#define BAUD 9600
+#define BAUD 19200
 #define MYUBRR (F_CPU/(8L*BAUD)-1)
 
 static volatile char in_buffer[BUFFER_SIZE];

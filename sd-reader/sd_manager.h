@@ -33,4 +33,5 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
 void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                      uint32_t BlockAddress, uint16_t TotalBlocks);
 
+uint32_t sd_get_blocks(void);
 #endif

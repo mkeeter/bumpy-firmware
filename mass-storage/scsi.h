@@ -42,8 +42,8 @@
 /* Configuration */
 #define TOTAL_LUNS      1
 
-/** Total number of bytes of the storage medium, comprised of one 8 GB microSD card. */
-#define VIRTUAL_MEMORY_BYTES                ((uint32_t)0x200000000)
+/** Total number of kilobytes of the storage medium, comprised of one 8 GB microSD card. */
+#define VIRTUAL_MEMORY_KBYTES                ((uint32_t)0x800000)
 
 /** Block size of the device. This is kept at 512 to remain compatible with the OS despite the underlying
  *  storage media (Dataflash) using a different native block size. Do not change this value.
@@ -53,10 +53,10 @@
 /** Total number of blocks of the virtual memory for reporting to the host as the device's total capacity. Do not
  *  change this value; change VIRTUAL_MEMORY_BYTES instead to alter the media size.
  */
-#define VIRTUAL_MEMORY_BLOCKS               (VIRTUAL_MEMORY_BYTES / VIRTUAL_MEMORY_BLOCK_SIZE)
+#define VIRTUAL_MEMORY_BLOCKS               ((uint32_t)((VIRTUAL_MEMORY_KBYTES / VIRTUAL_MEMORY_BLOCK_SIZE) << 10))
 
 /** Blocks in each LUN, calculated from the total capacity divided by the total number of Logical Units in the device. */
-#define LUN_MEDIA_BLOCKS                    (VIRTUAL_MEMORY_BLOCKS / TOTAL_LUNS)
+#define LUN_MEDIA_BLOCKS                    ((uint32_t)(VIRTUAL_MEMORY_BLOCKS / TOTAL_LUNS))
 
 #define DISK_READ_ONLY  false
 

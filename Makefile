@@ -4,13 +4,14 @@ F_CPU = 8000000
 F_USB = $(F_CPU)
 OPTIMIZATION = s
 TARGET = fw
-SRC = descriptors.c mass_storage.c encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
+SRC = encoder.c leds.c main.c mp3.c player.c sd.c serial.c tenths.c \
 	  sd-reader/byteordering.c sd-reader/fat.c sd-reader/partition.c \
-	  sd-reader/sd_raw.c sd-reader/scsi.c sd-reader/sd_manager.c \
-	  $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
+	  sd-reader/sd_raw.c sd-reader/sd_manager.c \
+	  mass-storage/descriptors.c mass-storage/mass_storage.c \
+	  mass-storage/scsi.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
 
 LUFA_PATH = lufa/LUFA
-CC_FLAGS = -DUSE_LUFA_CONFIG_HEADER
+CC_FLAGS = -DUSE_LUFA_CONFIG_HEADER -Imass-storage
 
 all:
 
@@ -19,7 +20,6 @@ include $(LUFA_PATH)/Build/lufa_sources.mk
 include $(LUFA_PATH)/Build/lufa_build.mk
 
 dfu: all
-	touch programmed
 	dfu-programmer $(MCU) erase
 	dfu-programmer $(MCU) flash --suppress-bootloader-mem $(TARGET).hex
 

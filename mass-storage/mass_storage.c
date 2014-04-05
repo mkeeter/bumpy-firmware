@@ -1,5 +1,5 @@
 #include "descriptors.h"
-#include "sd-reader/scsi.h"
+#include "scsi.h"
 
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
  *  passed to all Mass Storage Class driver functions, so that multiple instances of the same class
