@@ -155,6 +155,8 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
       Endpoint_ClearOUT();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 uint32_t sd_get_blocks(void)
 {
     struct sd_raw_info info;
