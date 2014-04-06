@@ -11,4 +11,6 @@ void LEDs_sleep(void);
 void LEDs_next(void);
 void LEDs_prev(void);
 
+void LEDs_usb(void);
+
 #endif

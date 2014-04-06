@@ -30,6 +30,28 @@
 /** Buffer used in reading and writing */
 static uint8_t sd_buffer[16];
 
+#include "serial.h"
+static uint8_t sd_read_test_handler(uint8_t* buffer, offset_t offset, void* p)
+{
+    serial_wait();
+    for (int i=0; i < 16; ++i)
+    {
+        put_char(buffer[i]);
+    }
+    return 1;
+}
+
+void sd_read_test(void)
+{
+    for (offset_t addr = 0; addr < sd_get_blocks(); addr++)
+    {
+        /* Read this block into the endpoint in 16-byte chunks. */
+        sd_raw_read_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
+                             sd_buffer, 16, VIRTUAL_MEMORY_BLOCK_SIZE,
+                             &sd_read_test_handler, NULL);
+    }
+}
+
 /* Callback to read a single chunk of a block from the SD card into the
  * endpoint, processing 16 bytes.
  */
@@ -46,22 +68,22 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
           return 0;
     }
 
-    Endpoint_Write_8(sd_buffer[0]);
-    Endpoint_Write_8(sd_buffer[1]);
-    Endpoint_Write_8(sd_buffer[2]);
-    Endpoint_Write_8(sd_buffer[3]);
-    Endpoint_Write_8(sd_buffer[4]);
-    Endpoint_Write_8(sd_buffer[5]);
-    Endpoint_Write_8(sd_buffer[6]);
-    Endpoint_Write_8(sd_buffer[7]);
-    Endpoint_Write_8(sd_buffer[8]);
-    Endpoint_Write_8(sd_buffer[9]);
-    Endpoint_Write_8(sd_buffer[10]);
-    Endpoint_Write_8(sd_buffer[11]);
-    Endpoint_Write_8(sd_buffer[12]);
-    Endpoint_Write_8(sd_buffer[13]);
-    Endpoint_Write_8(sd_buffer[14]);
-    Endpoint_Write_8(sd_buffer[15]);
+    Endpoint_Write_8(buffer[0]);
+    Endpoint_Write_8(buffer[1]);
+    Endpoint_Write_8(buffer[2]);
+    Endpoint_Write_8(buffer[3]);
+    Endpoint_Write_8(buffer[4]);
+    Endpoint_Write_8(buffer[5]);
+    Endpoint_Write_8(buffer[6]);
+    Endpoint_Write_8(buffer[7]);
+    Endpoint_Write_8(buffer[8]);
+    Endpoint_Write_8(buffer[9]);
+    Endpoint_Write_8(buffer[10]);
+    Endpoint_Write_8(buffer[11]);
+    Endpoint_Write_8(buffer[12]);
+    Endpoint_Write_8(buffer[13]);
+    Endpoint_Write_8(buffer[14]);
+    Endpoint_Write_8(buffer[15]);
 
     /* Check if the current command is being aborted by the host */
     if (((USB_ClassInfo_MS_Device_t*)p)->State.IsMassStoreReset)
@@ -69,6 +91,8 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
 
     return 1;
 }
+
+
 
 void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                     offset_t BlockAddress, uint16_t TotalBlocks)

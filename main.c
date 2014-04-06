@@ -14,6 +14,11 @@
 #include "player.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+int freeRam (void) {
+    extern int __heap_start, *__brkval;
+    volatile int v;
+    return (int) (&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+}
 
 int main(void)
 {
@@ -29,21 +34,25 @@ int main(void)
     mass_storage_init();
     sei();
 
-    printf("Booting up...\n");
+    LEDs[0] = 5;
 
-    if (sd_init())  { printf("SD card initialized!\n"); }
-    if (mp3_init()) { printf("VS1003  initialized!\n"); }
+    sd_init();
+    mp3_init();
 
-    while(1)
-    {
-        usb_task();
-    }
+    sd_read_test();
 
     // Initialize player state
     player_init();
     while (1)
     {
-        player_manage_buffer();
-        player_update_state();
+        if (usb_task())
+        {
+            LEDs_usb();
+        }
+        else
+        {
+            player_manage_buffer();
+            player_update_state();
+        }
     }
 }

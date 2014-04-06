@@ -31,10 +31,14 @@ void mass_storage_init(void)
     USB_Init();
 }
 
-void usb_task(void)
+bool usb_task(void)
 {
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+        return false;
+
     MS_Device_USBTask(&Disk_MS_Interface);
     USB_USBTask();
+    return true;
 }
 
 /** Event handler for the library USB Configuration Changed event. */

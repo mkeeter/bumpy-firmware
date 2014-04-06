@@ -9,14 +9,12 @@
 #include "sd-reader/fat.h"
 #include "sd-reader/partition.h"
 
-struct partition_struct* partition = NULL;
-struct fat_fs_struct* fs = NULL;
-struct fat_dir_struct* root = NULL;
+static struct partition_struct* partition = NULL;
+static struct fat_fs_struct* fs = NULL;
+static struct fat_dir_struct* root = NULL;
+static struct fat_file_struct* file = NULL;
 
-struct fat_dir_entry_struct file_dir;
-struct fat_file_struct* file = NULL;
-
-unsigned song_count = 0;
+static unsigned song_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,13 +25,15 @@ static inline bool sd_has_extension_mp3(struct fat_dir_entry_struct f)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void count_songs(void)
+static void sd_count_songs(void)
 {
     song_count = 0;
 
     // Search through the memory card to make sure that there's at least
     // one file ending in "mp3".
     fat_reset_dir(root);
+
+    struct fat_dir_entry_struct file_dir;
     while(fat_read_dir(root, &file_dir))
     {
         if (sd_has_extension_mp3(file_dir))     song_count++;
@@ -48,47 +48,71 @@ int sd_init(void)
         printf("Error: sd_raw_init failed\n");
         return 0;
     }
-
-    partition = partition_open(
-            sd_raw_read,  sd_raw_read_interval,
-            sd_raw_write, sd_raw_write_interval,
-            0);
-    if (!partition) {
-        printf("Error: partition_open failed\n");
-        return 0;
-    }
-
-    fs = fat_open(partition);
-    if (!fs) {
-        printf("Error: fat_open failed\n");
-        return 0;
-    }
-
-    struct fat_dir_entry_struct root_dir;
-    fat_get_dir_entry_of_path(fs, "/", &root_dir);
-    root = fat_open_dir(fs, &root_dir);
-
-    count_songs();
-    sd_next_song();
-
     return 1;
 }
 
 
+void sd_mount_filesystem(void)
+{
+    // Make the function idempotent.
+    if (partition != NULL && fs != NULL && root != NULL && file != NULL)
+        return;
+
+    // Make sure that the file system isn't partially mounted.
+    sd_unmount_filesystem();
+
+    // Mount the partition
+    partition = partition_open(
+            sd_raw_read,  sd_raw_read_interval,
+            sd_raw_write, sd_raw_write_interval,
+            0);
+
+    // Mount the filesystem
+    fs = fat_open(partition);
+
+    // Open the root directory
+    struct fat_dir_entry_struct root_dir;
+    fat_get_dir_entry_of_path(fs, "/", &root_dir);
+    root = fat_open_dir(fs, &root_dir);
+
+    sd_count_songs();
+    sd_next_song();
+}
+
+
+void sd_unmount_filesystem(void)
+{
+    if (file != NULL)
+        fat_close_file(file);
+    file = NULL;
+
+    if (root != NULL)
+        fat_close_dir(root);
+    root = NULL;
+
+    if (fs != NULL)
+        fat_close(fs);
+    fs = NULL;
+
+    if (partition != NULL)
+        partition_close(partition);
+    partition = NULL;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void sd_next_song(void)
+struct fat_dir_entry_struct sd_next_song(void)
 {
-    if (!song_count)     return;
+    struct fat_dir_entry_struct file_dir;
+    file_dir.file_size = 0;
+
+    if (!song_count)     return file_dir;
 
     if (file)   fat_close_file(file);
     file = NULL;
 
     while (1)
     {
-        printf("Current file: %s\n", file_dir.long_name);
-
         // If we've reached the last file, reset the directory
         if (!fat_read_dir(root, &file_dir))
         {
@@ -101,23 +125,25 @@ void sd_next_song(void)
             break;
         }
     }
-
-    printf("Opening file: %s\n", file_dir.long_name);
     file = fat_open_file(fs, &file_dir);
+
+    return file_dir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void sd_prev_song(void)
+struct fat_dir_entry_struct sd_prev_song(void)
 {
-    if (!song_count)     return;
+    struct fat_dir_entry_struct file_dir;
+    file_dir.file_size = 0;
+
+    if (!song_count)     return file_dir;
 
     for (int i=0; i < song_count - 1; ++i)
     {
-        sd_next_song();
+        file_dir = sd_next_song();
     }
-
-    printf("Gone back to file: %s\n", file_dir.long_name);
+    return file_dir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

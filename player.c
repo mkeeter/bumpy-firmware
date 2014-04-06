@@ -12,6 +12,8 @@ void player_manage_buffer(void)
 {
     if (buffer.empty)
     {
+        sd_mount_filesystem();
+
         // Copy data from the SD card into our local the buffer.
         // If we're out of data, skip to the next song.
         while (!sd_get_data(buffer.data, MP3_BUFFER_SIZE))

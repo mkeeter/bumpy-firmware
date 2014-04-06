@@ -8,7 +8,7 @@
 #define BUFFER_SIZE (1 << 7) // must be a power of 2, otherwise the
 #define BUFFER_MASK (BUFFER_SIZE - 1) // masking won't work.
 
-#define BAUD 19200
+#define BAUD 57600
 #define MYUBRR (F_CPU/(8L*BAUD)-1)
 
 static volatile char in_buffer[BUFFER_SIZE];
@@ -101,6 +101,12 @@ int put_char(char txchar) {
 
     SET(UCSR1B, UDRIE1); // Enable tx interrupt
     return 0;
+}
+
+
+void serial_wait(void)
+{
+    while (!out_buffer_empty());
 }
 
 
