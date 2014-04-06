@@ -28,9 +28,9 @@ void encoder_init(void)
 
 void encoder_clear(void)
 {
-    cli();
+    PCICR &= ~(1 << PCIE0);
     encoder = 0;
-    sei();
+    PCICR |=  (1 << PCIE0);
 }
 
 ISR(PCINT0_vect)
