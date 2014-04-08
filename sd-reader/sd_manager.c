@@ -33,10 +33,10 @@ static uint8_t sd_buffer[16];
 #include "serial.h"
 static uint8_t sd_read_test_handler(uint8_t* buffer, offset_t offset, void* p)
 {
-    serial_wait();
+    //serial_wait();
     for (int i=0; i < 16; ++i)
     {
-        put_char(buffer[i]);
+        //put_char(buffer[i]);
     }
     return 1;
 }
@@ -101,6 +101,9 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     if (Endpoint_WaitUntilReady())
         return;
 
+    //serial_wait();
+    printf("Reading %u blocks from %llu\n", TotalBlocks, BlockAddress);
+    //serial_wait();
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
