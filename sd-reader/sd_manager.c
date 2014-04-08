@@ -30,28 +30,6 @@
 /** Buffer used in reading and writing */
 static uint8_t sd_buffer[16];
 
-#include "serial.h"
-static uint8_t sd_read_test_handler(uint8_t* buffer, offset_t offset, void* p)
-{
-    //serial_wait();
-    for (int i=0; i < 16; ++i)
-    {
-        //put_char(buffer[i]);
-    }
-    return 1;
-}
-
-void sd_read_test(void)
-{
-    for (offset_t addr = 0; addr < sd_get_blocks(); addr++)
-    {
-        /* Read this block into the endpoint in 16-byte chunks. */
-        sd_raw_read_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
-                             sd_buffer, 16, VIRTUAL_MEMORY_BLOCK_SIZE,
-                             &sd_read_test_handler, NULL);
-    }
-}
-
 /* Callback to read a single chunk of a block from the SD card into the
  * endpoint, processing 16 bytes.
  */
@@ -67,6 +45,13 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
         if (Endpoint_WaitUntilReady())
           return 0;
     }
+
+    uint32_t top = offset >> 32;
+    uint32_t bottom = offset & 0xffffffff;
+    printf("0x%lx%lx:  ", top, bottom);
+    for (int i=0; i < 16; ++i)
+        printf("%02x ", buffer[i]);
+    printf("\n");
 
     Endpoint_Write_8(buffer[0]);
     Endpoint_Write_8(buffer[1]);
@@ -102,7 +87,9 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
         return;
 
     //serial_wait();
-    printf("Reading %u blocks from %llu\n", TotalBlocks, BlockAddress);
+    uint32_t top = BlockAddress >> 32;
+    uint32_t bottom = BlockAddress & 0xffffffff;
+    printf("Reading %u blocks from 0x%lx%lx\n", TotalBlocks, top, bottom);
     //serial_wait();
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
