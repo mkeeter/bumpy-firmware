@@ -172,7 +172,7 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
         /* Read this block into the endpoint in 16-byte chunks. */
-        sd_raw_write_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
+        sd_raw_write_interval(addr << VIRTUAL_MEMORY_BLOCK_SHIFT,
                               sd_buffer, VIRTUAL_MEMORY_BLOCK_SIZE,
                               &sd_write_block_handler, MSInterfaceInfo);
     }
@@ -189,5 +189,5 @@ uint32_t sd_get_blocks(void)
     struct sd_raw_info info;
     sd_raw_get_info(&info);
 
-    return info.capacity >> 9;
+    return info.capacity >> VIRTUAL_MEMORY_BLOCK_SHIFT;
 }

@@ -14,11 +14,6 @@
 #include "player.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-int freeRam (void) {
-    extern int __heap_start, *__brkval;
-    volatile int v;
-    return (int) (&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
-}
 
 int main(void)
 {
@@ -34,12 +29,13 @@ int main(void)
     mass_storage_init();
     sei();
 
+    printf("Hello, world!\n");
+    _delay_ms(1000);
+
     LEDs[0] = 5;
 
     sd_init();
     mp3_init();
-
-    sd_read_test();
 
     // Initialize player state
     player_init();

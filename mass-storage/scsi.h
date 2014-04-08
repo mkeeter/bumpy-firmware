@@ -45,7 +45,8 @@
 /** Block size of the device. This is kept at 512 to remain compatible with the OS despite the underlying
  *  storage media (Dataflash) using a different native block size. Do not change this value.
  */
-#define VIRTUAL_MEMORY_BLOCK_SIZE           512
+#define VIRTUAL_MEMORY_BLOCK_SHIFT     9
+#define VIRTUAL_MEMORY_BLOCK_SIZE     (1 << VIRTUAL_MEMORY_BLOCK_SHIFT)
 
 #define DISK_READ_ONLY  false
 

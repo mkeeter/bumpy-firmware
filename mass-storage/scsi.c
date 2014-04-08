@@ -267,8 +267,8 @@ static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInte
         return false;
     }
 
-    /* Check to see if all attached Dataflash ICs are functional */
-    if (!sd_check())
+    /* Check to see if the attached SD card is functional */
+    if (!sd_raw_available())
     {
         /* Update SENSE key with a hardware error condition and return command fail */
         SCSI_SET_SENSE(SCSI_SENSE_KEY_HARDWARE_ERROR,
