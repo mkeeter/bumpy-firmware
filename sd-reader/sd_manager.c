@@ -46,29 +46,14 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
           return 0;
     }
 
-    uint32_t top = offset >> 32;
-    uint32_t bottom = offset & 0xffffffff;
-    printf("0x%lx%lx:  ", top, bottom);
-    for (int i=0; i < 16; ++i)
-        printf("%02x ", buffer[i]);
-    printf("\n");
+    //uint32_t top = offset >> 32;
+    //uint32_t bottom = offset & 0xffffffff;
+    //printf("0x%lx%lx:  ", top, bottom);
+    //for (int i=0; i < 16; ++i)
+        //printf("%02x ", buffer[i]);
+    //printf("\n");
 
-    Endpoint_Write_8(buffer[0]);
-    Endpoint_Write_8(buffer[1]);
-    Endpoint_Write_8(buffer[2]);
-    Endpoint_Write_8(buffer[3]);
-    Endpoint_Write_8(buffer[4]);
-    Endpoint_Write_8(buffer[5]);
-    Endpoint_Write_8(buffer[6]);
-    Endpoint_Write_8(buffer[7]);
-    Endpoint_Write_8(buffer[8]);
-    Endpoint_Write_8(buffer[9]);
-    Endpoint_Write_8(buffer[10]);
-    Endpoint_Write_8(buffer[11]);
-    Endpoint_Write_8(buffer[12]);
-    Endpoint_Write_8(buffer[13]);
-    Endpoint_Write_8(buffer[14]);
-    Endpoint_Write_8(buffer[15]);
+    Endpoint_Write_Stream_LE(buffer, 16, NULL);
 
     /* Check if the current command is being aborted by the host */
     if (((USB_ClassInfo_MS_Device_t*)p)->State.IsMassStoreReset)
@@ -89,7 +74,7 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     //serial_wait();
     uint32_t top = BlockAddress >> 32;
     uint32_t bottom = BlockAddress & 0xffffffff;
-    printf("Reading %u blocks from 0x%lx%lx\n", TotalBlocks, top, bottom);
+    //printf("Reading %u blocks from 0x%lx%lx\n", TotalBlocks, top, bottom);
     //serial_wait();
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
@@ -123,23 +108,9 @@ static uintptr_t sd_write_block_handler(uint8_t* buffer, offset_t offset, void* 
           return 0;
     }
 
-    /* Write one 16-byte chunk of data to the sd card buffer */
-    sd_buffer[0] = Endpoint_Read_8();
-    sd_buffer[1] = Endpoint_Read_8();
-    sd_buffer[2] = Endpoint_Read_8();
-    sd_buffer[3] = Endpoint_Read_8();
-    sd_buffer[4] = Endpoint_Read_8();
-    sd_buffer[5] = Endpoint_Read_8();
-    sd_buffer[6] = Endpoint_Read_8();
-    sd_buffer[7] = Endpoint_Read_8();
-    sd_buffer[8] = Endpoint_Read_8();
-    sd_buffer[9] = Endpoint_Read_8();
-    sd_buffer[10] = Endpoint_Read_8();
-    sd_buffer[11] = Endpoint_Read_8();
-    sd_buffer[12] = Endpoint_Read_8();
-    sd_buffer[13] = Endpoint_Read_8();
-    sd_buffer[14] = Endpoint_Read_8();
-    sd_buffer[15] = Endpoint_Read_8();
+    /* Read in 16 bytes and store it in the buffer, from where it
+     * will be loaded onto the SD card. */
+    Endpoint_Read_Stream_LE(buffer, 16, NULL);
 
     /* Check if the current command is being aborted by the host */
     if (((USB_ClassInfo_MS_Device_t*)p)->State.IsMassStoreReset)
