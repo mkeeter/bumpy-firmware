@@ -334,7 +334,7 @@ static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfa
         sd_write_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
 
     /* Update the bytes transferred counter and succeed the command */
-    MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks * VIRTUAL_MEMORY_BLOCK_SIZE);
+    MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks) << VIRTUAL_MEMORY_BLOCK_SHIFT;
 
     return true;
 }

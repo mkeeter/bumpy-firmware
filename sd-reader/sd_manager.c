@@ -72,15 +72,15 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
         return;
 
     //serial_wait();
-    uint32_t top = BlockAddress >> 32;
-    uint32_t bottom = BlockAddress & 0xffffffff;
+    //uint32_t top = BlockAddress >> 32;
+    //uint32_t bottom = BlockAddress & 0xffffffff;
     //printf("Reading %u blocks from 0x%lx%lx\n", TotalBlocks, top, bottom);
     //serial_wait();
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
         /* Read this block into the endpoint in 16-byte chunks. */
-        sd_raw_read_interval(addr * VIRTUAL_MEMORY_BLOCK_SIZE,
+        sd_raw_read_interval(addr << VIRTUAL_MEMORY_BLOCK_SHIFT,
                              sd_buffer, 16, VIRTUAL_MEMORY_BLOCK_SIZE,
                              &sd_read_block_handler, MSInterfaceInfo);
     }
