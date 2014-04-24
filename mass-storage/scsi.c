@@ -106,31 +106,24 @@ bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
     switch (MSInterfaceInfo->State.CommandBlock.SCSICommandData[0])
     {
         case SCSI_CMD_INQUIRY:
-            //printf("Inquiry\n");
             CommandSuccess = SCSI_Command_Inquiry(MSInterfaceInfo);
             break;
         case SCSI_CMD_REQUEST_SENSE:
-            //printf("Sense\n");
             CommandSuccess = SCSI_Command_Request_Sense(MSInterfaceInfo);
             break;
         case SCSI_CMD_READ_CAPACITY_10:
-            //printf("Capacity\n");
             CommandSuccess = SCSI_Command_Read_Capacity_10(MSInterfaceInfo);
             break;
         case SCSI_CMD_SEND_DIAGNOSTIC:
-            //printf("Diagnostic\n");
             CommandSuccess = SCSI_Command_Send_Diagnostic(MSInterfaceInfo);
             break;
         case SCSI_CMD_WRITE_10:
-            //printf("Write\n");
             CommandSuccess = SCSI_Command_ReadWrite_10(MSInterfaceInfo, DATA_WRITE);
             break;
         case SCSI_CMD_READ_10:
-            //printf("Read\n");
             CommandSuccess = SCSI_Command_ReadWrite_10(MSInterfaceInfo, DATA_READ);
             break;
         case SCSI_CMD_MODE_SENSE_6:
-            //printf("Mode\n");
             CommandSuccess = SCSI_Command_ModeSense_6(MSInterfaceInfo);
             break;
         case SCSI_CMD_START_STOP_UNIT:
@@ -143,7 +136,6 @@ bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
             MSInterfaceInfo->State.CommandBlock.DataTransferLength = 0;
             break;
         default:
-            //printf("Invalid %i\n", MSInterfaceInfo->State.CommandBlock.SCSICommandData[0]);
             /* Update the SENSE key to reflect the invalid command */
             SCSI_SET_SENSE(SCSI_SENSE_KEY_ILLEGAL_REQUEST,
                            SCSI_ASENSE_INVALID_COMMAND,
@@ -329,10 +321,13 @@ static bool SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfa
     }
 
     /* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
-    if (IsDataRead == DATA_READ)
+    if (IsDataRead == DATA_READ) {
+        /* printf("Reading 0x%x blocks from 0x%lx\n", TotalBlocks, BlockAddress); */
         sd_read_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
-    else
+    } else {
+        /* printf("Writing 0x%x blocks from 0x%lx\n", TotalBlocks, BlockAddress); */
         sd_write_blocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
+    }
 
     /* Update the bytes transferred counter and succeed the command */
     MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks) << VIRTUAL_MEMORY_BLOCK_SHIFT;
