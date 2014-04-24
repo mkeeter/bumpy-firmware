@@ -30,8 +30,6 @@ int main(void)
     sei();
 
     printf("Hello, world!\n");
-    _delay_ms(1000);
-
     LEDs[0] = 5;
 
     sd_init();
