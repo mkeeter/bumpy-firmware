@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <avr/io.h>
+#include <LUFA/Drivers/Peripheral/SPI.h>
 
 #include "mp3.h"
 #include "macros.h"
@@ -75,14 +76,6 @@ inline bool mp3_wants_data(void)
 }
 
 
-static inline uint8_t mp3_spi_send(const uint8_t b)
-{
-    SPDR = b;
-    while(!(SPSR & (1 << SPIF)));
-    CLEAR(SPSR, SPIF);
-    return SPDR;
-}
-
 void mp3_send_data(uint8_t* buffer)
 {
 
@@ -91,7 +84,7 @@ void mp3_send_data(uint8_t* buffer)
 
     for (int i=0; i < MP3_BUFFER_SIZE; ++i)
     {
-        mp3_spi_send(buffer[i]);
+        SPI_SendByte(buffer[i]);
     }
 
     // Deselect SDI port.
@@ -114,14 +107,14 @@ uint16_t mp3_read(const uint8_t addr)
     // Select the mp3 for a data transmission
     mp3_select();
 
-    mp3_spi_send(0b00000011); // opcode for read
-    mp3_spi_send(addr);
+    SPI_SendByte(0b00000011); // opcode for read
+    SPI_SendByte(addr);
 
     // Use dummy sends to get out data
     uint16_t out = 0;
-    out = mp3_spi_send(0);
+    out = SPI_ReceiveByte();
     out <<= 8;
-    out = mp3_spi_send(0);
+    out = SPI_ReceiveByte();
 
     mp3_deselect();
 
@@ -133,10 +126,10 @@ void mp3_write(const uint8_t addr, const uint16_t data)
     mp3_wait();
     mp3_select();
 
-    mp3_spi_send(0b00000010); // opcode for write
-    mp3_spi_send(addr);
-    mp3_spi_send(data >> 8);
-    mp3_spi_send(data & 0xff);
+    SPI_SendByte(0b00000010); // opcode for write
+    SPI_SendByte(addr);
+    SPI_SendByte(data >> 8);
+    SPI_SendByte(data & 0xff);
 
     mp3_deselect();
 }
