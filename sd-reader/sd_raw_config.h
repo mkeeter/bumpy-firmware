@@ -115,7 +115,7 @@ extern "C"
 #define configure_pin_locked() /* Nothing to do here */
 
 #define get_pin_available() (PINF & (1 << PINF7))
-#define get_pin_locked() 0
+#define get_pin_locked() 1
 
 #if SD_RAW_SDHC
     typedef uint64_t offset_t;
