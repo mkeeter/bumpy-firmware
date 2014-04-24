@@ -46,13 +46,6 @@ static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
           return 0;
     }
 
-    //uint32_t top = offset >> 32;
-    //uint32_t bottom = offset & 0xffffffff;
-    //printf("0x%lx%lx:  ", top, bottom);
-    //for (int i=0; i < 16; ++i)
-        //printf("%02x ", buffer[i]);
-    //printf("\n");
-
     Endpoint_Write_Stream_LE(buffer, 16, NULL);
 
     /* Check if the current command is being aborted by the host */
@@ -71,11 +64,6 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     if (Endpoint_WaitUntilReady())
         return;
 
-    //serial_wait();
-    //uint32_t top = BlockAddress >> 32;
-    //uint32_t bottom = BlockAddress & 0xffffffff;
-    //printf("Reading %u blocks from 0x%lx%lx\n", TotalBlocks, top, bottom);
-    //serial_wait();
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
