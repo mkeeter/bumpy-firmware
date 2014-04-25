@@ -122,9 +122,13 @@ struct sd_raw_info
     uint8_t format;
 };
 
+#if !SD_RAW_SAVE_RAM
 extern uint8_t sd_raw_block[512];
 extern offset_t sd_raw_block_address;
+#if SD_RAW_WRITE_BUFFERING
 extern uint8_t sd_raw_block_written;
+#endif
+#endif
 
 typedef uint8_t (*sd_raw_read_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);
 typedef uintptr_t (*sd_raw_write_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);
@@ -138,6 +142,10 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
 uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length);
 uint8_t sd_raw_write_interval(offset_t offset, uint8_t* buffer, uintptr_t length, sd_raw_write_interval_handler_t callback, void* p);
 uint8_t sd_raw_sync(void);
+
+#if SD_RAW_WRITE_BUFFERING && !SD_RAW_SAVE_RAM
+uint8_t sd_raw_cache_block(offset_t block_address);
+#endif
 
 uint8_t sd_raw_get_info(struct sd_raw_info* info);
 

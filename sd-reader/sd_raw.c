@@ -432,12 +432,15 @@ uint8_t sd_raw_send_command(uint8_t command, uint32_t arg)
  * \param[in] block_address The block to read.
  * \returns 0 on failure, 1 on success.
  */
+#if SD_RAW_WRITE_BUFFERING && !SD_RAW_SAVE_RAM
 uint8_t sd_raw_cache_block(offset_t block_address)
 {
-#if SD_RAW_WRITE_BUFFERING
-    if(!sd_raw_sync())
+    /* If we've already cached this data, then return 1. */
+    if (sd_raw_block_address == block_address)
+        return 1;
+    /* Otherwise, write the in-RAM raw block to the card. */
+    else if(!sd_raw_sync())
         return 0;
-#endif
 
     /* address card */
     select_card();
@@ -474,6 +477,7 @@ uint8_t sd_raw_cache_block(offset_t block_address)
 
     return 1;
 }
+#endif
 
 /**
  * \ingroup sd_raw
