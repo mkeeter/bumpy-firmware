@@ -29,11 +29,13 @@ int main(void)
     mass_storage_init();
     sei();
 
-    printf("Hello, world!\n");
     LEDs[0] = 5;
+    while (!sd_init())
+        _delay_ms(100);
 
-    sd_init();
-    mp3_init();
+    LEDs[1] = 5;
+    while (!mp3_init())
+        _delay_ms(100);
 
     // Initialize player state
     player_init();

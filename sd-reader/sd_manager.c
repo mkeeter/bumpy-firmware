@@ -40,15 +40,9 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
         sd_raw_cache_block(addr << VIRTUAL_MEMORY_BLOCK_SHIFT);
 
         uint16_t written = 0;
-        uint8_t error;
-        while((error = Endpoint_Write_Stream_LE(
-                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written))
+        while(Endpoint_Write_Stream_LE(
+                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
               ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
-
-        if (error != ENDPOINT_RWSTREAM_NoError)
-        {
-            printf(":(");
-        }
     }
 
     /* If the endpoint is full, send its contents to the host */
@@ -72,17 +66,10 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
         sd_raw_block_address = addr << VIRTUAL_MEMORY_BLOCK_SHIFT;
         sd_raw_block_written = 0;
 
-        uint8_t error;
         uint16_t written = 0;
-
-        while((error = Endpoint_Read_Stream_LE(
-                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written))
+        while(Endpoint_Read_Stream_LE(
+                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
               ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
-
-        if (error != ENDPOINT_RWSTREAM_NoError)
-        {
-            printf(":(");
-        }
     }
 
     /* If the endpoint is empty, clear it ready for the next packet from the host */

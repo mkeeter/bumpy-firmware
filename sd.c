@@ -42,13 +42,10 @@ static void sd_count_songs(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Initializes the SD card, returning 1 if successful or 0 if failed.
 int sd_init(void)
 {
-    if (!sd_raw_init()) {
-        printf("Error: sd_raw_init failed\n");
-        return 0;
-    }
-    return 1;
+    return sd_raw_init();
 }
 
 

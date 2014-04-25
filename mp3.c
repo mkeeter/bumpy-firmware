@@ -10,6 +10,8 @@ int mp3_volume = 5;
 void mp3_write(const uint8_t addr, const uint16_t data);
 static void mp3_write_volume(void);
 
+
+// Initializes and checks mp3 player.  Returns 1 if successful, 0 otherwise.
 int mp3_init(void)
 {
     // MP3 chip select
@@ -39,10 +41,8 @@ int mp3_init(void)
 
     // Check to make sure that this chip is the right one.
     const uint16_t version = (mp3_read(0x1) & 0xf0) >> 4;
-    if (version != 3) {
-        printf("Error: Unexpected VS1003ds version (%i)", version);
+    if (version != 3)
         return 0;
-    }
 
     mp3_write_volume();
 
