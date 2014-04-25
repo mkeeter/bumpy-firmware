@@ -161,6 +161,7 @@ static uint8_t sd_raw_card_type;
 
 /* private helper functions */
 static uint8_t sd_raw_rec_byte(void) ATTR_ALWAYS_INLINE;
+static void sd_raw_ignore_byte(void) ATTR_ALWAYS_INLINE;
 static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
 
 /**
@@ -204,7 +205,7 @@ uint8_t sd_raw_init(void)
     for(uint8_t i = 0; i < 10; ++i)
     {
         /* wait 8 clock cycles */
-        sd_raw_rec_byte();
+        sd_raw_ignore_byte();
     }
 
     /* address card */
@@ -230,8 +231,8 @@ uint8_t sd_raw_init(void)
     response = sd_raw_send_command(CMD_SEND_IF_COND, 0x100 /* 2.7V - 3.6V */ | 0xaa /* test pattern */);
     if((response & (1 << R1_ILL_COMMAND)) == 0)
     {
-        sd_raw_rec_byte();
-        sd_raw_rec_byte();
+        sd_raw_ignore_byte();
+        sd_raw_ignore_byte();
         if((sd_raw_rec_byte() & 0x01) == 0)
             return 0; /* card operation voltage range doesn't match */
         if(sd_raw_rec_byte() != 0xaa)
@@ -297,9 +298,9 @@ uint8_t sd_raw_init(void)
         if(sd_raw_rec_byte() & 0x40)
             sd_raw_card_type |= (1 << SD_RAW_SPEC_SDHC);
 
-        sd_raw_rec_byte();
-        sd_raw_rec_byte();
-        sd_raw_rec_byte();
+        sd_raw_ignore_byte();
+        sd_raw_ignore_byte();
+        sd_raw_ignore_byte();
     }
 #endif
 
@@ -358,12 +359,23 @@ uint8_t sd_raw_locked(void)
  *
  * \returns The byte which should be read.
  */
-uint8_t sd_raw_rec_byte(void)
+static inline uint8_t sd_raw_rec_byte(void)
 {
     /* send dummy data for receiving some */
     SPDR = 0xff;
     while(!(SPSR & (1 << SPIF)));
     return SPDR;
+}
+
+/**
+ * \ingroup sd_raw
+ * Ignores a raw byte from the memory card.
+ */
+static inline void sd_raw_ignore_byte(void)
+{
+    /* send dummy data for receiving some */
+    SPDR = 0xff;
+    while(!(SPSR & (1 << SPIF)));
 }
 
 /**
@@ -379,7 +391,7 @@ uint8_t sd_raw_send_command(uint8_t command, uint32_t arg)
     uint8_t response;
 
     /* wait some clock cycles */
-    sd_raw_rec_byte();
+    sd_raw_ignore_byte();
 
     /* send command via SPI */
     SPI_SendByte(0x40 | command);
@@ -481,16 +493,16 @@ uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length)
             memcpy(buffer, raw_block + block_offset, read_length);
             buffer += read_length;
 #endif
-            
+
             /* read crc16 */
-            sd_raw_rec_byte();
-            sd_raw_rec_byte();
-            
+            sd_raw_ignore_byte();
+            sd_raw_ignore_byte();
+
             /* deaddress card */
             unselect_card();
 
             /* let card some time to finish */
-            sd_raw_rec_byte();
+            sd_raw_ignore_byte();
         }
 #if !SD_RAW_SAVE_RAM
         else
@@ -582,7 +594,7 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
 
         /* read up to the data of interest */
         for(uint16_t i = 0; i < block_offset; ++i)
-            sd_raw_rec_byte();
+            sd_raw_ignore_byte();
 
         /* read interval bytes of data and execute the callback */
         do
@@ -604,14 +616,14 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
             length -= interval;
 
         } while(read_length > 0 && length > 0);
-        
+
         /* read rest of data block */
         while(read_length-- > 0)
-            sd_raw_rec_byte();
-        
+            sd_raw_ignore_byte();
+
         /* read crc16 */
-        sd_raw_rec_byte();
-        sd_raw_rec_byte();
+        sd_raw_ignore_byte();
+        sd_raw_ignore_byte();
 
         if(length < interval)
             break;
@@ -619,12 +631,12 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
         offset = offset - block_offset + 512;
 
     } while(!finished);
-    
+
     /* deaddress card */
     unselect_card();
 
     /* let card some time to finish */
-    sd_raw_rec_byte();
+    sd_raw_ignore_byte();
 
     return 1;
 #endif
@@ -720,7 +732,7 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
 
         /* wait while card is busy */
         while(sd_raw_rec_byte() != 0xff);
-        sd_raw_rec_byte();
+        sd_raw_ignore_byte();
 
         /* deaddress card */
         unselect_card();
