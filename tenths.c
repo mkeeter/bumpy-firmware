@@ -6,7 +6,7 @@
 
 volatile unsigned tenths = 0;
 
-void tenths_init()
+void tenths_init(void)
 {
     // Hit output compare about once every tenth of a second
     OCR1AH = 0x07;

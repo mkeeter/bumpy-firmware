@@ -72,6 +72,12 @@ void LEDs_prev()
     }
 }
 
+void LEDs_usb()
+{
+    for (int i=0; i < 8; ++i)
+        LEDs[i] = (i % 2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 volatile uint8_t tick = 0;  // Goes from 0 to 7.
@@ -79,7 +85,7 @@ uint8_t levels[8] = {
     0, 10, 20, 35, 55, 80, 110, 145
 };
 
-void update_LEDs()
+void update_LEDs(void)
 {
     for (int i=0; i < 8; ++i)
     {

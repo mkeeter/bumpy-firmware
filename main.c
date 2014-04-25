@@ -7,6 +7,7 @@
 #include "encoder.h"
 #include "serial.h"
 #include "leds.h"
+#include "mass_storage.h"
 #include "mp3.h"
 #include "sd.h"
 #include "tenths.h"
@@ -14,7 +15,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main()
+int main(void)
 {
     // If the encoder switch is pressed on startup, jump to DFU bootloader.
     encoder_bootloader_check();
@@ -24,18 +25,30 @@ int main()
     LEDs_init();
     serial_init();
     tenths_init();
+
+    mass_storage_init();
     sei();
 
-    printf("Booting up...\n");
+    LEDs[0] = 5;
+    while (!sd_init())
+        _delay_ms(100);
 
-    if (sd_init())  { printf("SD card initialized!\n"); }
-    if (mp3_init()) { printf("VS1003  initialized!\n"); }
+    LEDs[1] = 5;
+    while (!mp3_init())
+        _delay_ms(100);
 
     // Initialize player state
     player_init();
     while (1)
     {
-        player_manage_buffer();
-        player_update_state();
+        if (usb_task())
+        {
+            LEDs_usb();
+        }
+        else
+        {
+            player_manage_buffer();
+            player_update_state();
+        }
     }
 }

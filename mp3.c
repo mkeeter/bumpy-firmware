@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <avr/io.h>
+#include <LUFA/Drivers/Peripheral/SPI.h>
 
 #include "mp3.h"
 #include "macros.h"
@@ -7,9 +8,11 @@
 int mp3_volume = 5;
 
 void mp3_write(const uint8_t addr, const uint16_t data);
-static void mp3_write_volume();
+static void mp3_write_volume(void);
 
-int mp3_init()
+
+// Initializes and checks mp3 player.  Returns 1 if successful, 0 otherwise.
+int mp3_init(void)
 {
     // MP3 chip select
     OUTPUT(DDRF, PF4);
@@ -38,50 +41,40 @@ int mp3_init()
 
     // Check to make sure that this chip is the right one.
     const uint16_t version = (mp3_read(0x1) & 0xf0) >> 4;
-    if (version != 3) {
-        printf("Error: Unexpected VS1003ds version (%i)", version);
+    if (version != 3)
         return 0;
-    }
 
     mp3_write_volume();
 
     return 1;
 }
 
-static inline void mp3_select()
+static inline void mp3_select(void)
 {
     CLEAR(PORTF, PF4);
 }
 
-static inline void mp3_deselect()
+static inline void mp3_deselect(void)
 {
     SET(PORTF, PF4);
 }
 
-static inline void mp3_data_select()
+static inline void mp3_data_select(void)
 {
     CLEAR(PORTF, PF1);
 }
 
-static inline void mp3_data_deselect()
+static inline void mp3_data_deselect(void)
 {
     SET(PORTF, PF1);
 }
 
 // Checks DREQ line and returns True if it's high
-inline bool mp3_wants_data()
+inline bool mp3_wants_data(void)
 {
     return PINF & (1 << PF6);
 }
 
-
-static inline uint8_t mp3_spi_send(const uint8_t b)
-{
-    SPDR = b;
-    while(!(SPSR & (1 << SPIF)));
-    CLEAR(SPSR, SPIF);
-    return SPDR;
-}
 
 void mp3_send_data(uint8_t* buffer)
 {
@@ -91,7 +84,7 @@ void mp3_send_data(uint8_t* buffer)
 
     for (int i=0; i < MP3_BUFFER_SIZE; ++i)
     {
-        mp3_spi_send(buffer[i]);
+        SPI_SendByte(buffer[i]);
     }
 
     // Deselect SDI port.
@@ -99,7 +92,7 @@ void mp3_send_data(uint8_t* buffer)
 
 }
 
-static inline void mp3_wait()
+static inline void mp3_wait(void)
 {
     // Wait for DREQ to go high (signaling that the mp3 chip
     // can take in an SPI command).
@@ -114,14 +107,14 @@ uint16_t mp3_read(const uint8_t addr)
     // Select the mp3 for a data transmission
     mp3_select();
 
-    mp3_spi_send(0b00000011); // opcode for read
-    mp3_spi_send(addr);
+    SPI_SendByte(0b00000011); // opcode for read
+    SPI_SendByte(addr);
 
     // Use dummy sends to get out data
     uint16_t out = 0;
-    out = mp3_spi_send(0);
+    out = SPI_ReceiveByte();
     out <<= 8;
-    out = mp3_spi_send(0);
+    out = SPI_ReceiveByte();
 
     mp3_deselect();
 
@@ -133,22 +126,22 @@ void mp3_write(const uint8_t addr, const uint16_t data)
     mp3_wait();
     mp3_select();
 
-    mp3_spi_send(0b00000010); // opcode for write
-    mp3_spi_send(addr);
-    mp3_spi_send(data >> 8);
-    mp3_spi_send(data & 0xff);
+    SPI_SendByte(0b00000010); // opcode for write
+    SPI_SendByte(addr);
+    SPI_SendByte(data >> 8);
+    SPI_SendByte(data & 0xff);
 
     mp3_deselect();
 }
 
 
-static void mp3_write_volume()
+static void mp3_write_volume(void)
 {
     uint16_t v = 10*(8 - mp3_volume);
     mp3_write(0xb, (v << 8) | v);
 }
 
-void mp3_volume_up()
+void mp3_volume_up(void)
 {
     if (mp3_volume < 8)
     {
@@ -158,7 +151,7 @@ void mp3_volume_up()
 }
 
 
-void mp3_volume_down()
+void mp3_volume_down(void)
 {
     if (mp3_volume > 1)
     {

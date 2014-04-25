@@ -1,18 +1,20 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include "encoder.h"
 #include "macros.h"
 
 volatile int encoder=0;
 
-void encoder_bootloader_check()
+void encoder_bootloader_check(void)
 {
     PORTB |= (1 << PB6); // encoder switch pull-up
+    _delay_ms(100);
     if (encoder_switch)     __asm("jmp 0x7000");
 }
 
-void encoder_init()
+void encoder_init(void)
 {
     // Set internal pull-ups to on
     PORTB |= (1 << PB5); // encoder B
@@ -26,11 +28,11 @@ void encoder_init()
     PCMSK0 |= (1 << PCINT5);
 }
 
-void encoder_clear()
+void encoder_clear(void)
 {
-    cli();
+    PCICR &= ~(1 << PCIE0);
     encoder = 0;
-    sei();
+    PCICR |=  (1 << PCIE0);
 }
 
 ISR(PCINT0_vect)

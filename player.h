@@ -20,8 +20,8 @@ struct PlayerState {
 
 extern struct PlayerState player_state;
 
-void player_manage_buffer();
-void player_update_state();
-void player_init();
+void player_manage_buffer(void);
+void player_update_state(void);
+void player_init(void);
 
 #endif
