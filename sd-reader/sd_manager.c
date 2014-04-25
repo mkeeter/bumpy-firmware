@@ -27,36 +27,6 @@
 #include "sd_raw.h"
 #include "scsi.h"
 
-/** Buffer used in reading and writing */
-static uint8_t sd_buffer[16];
-
-/* Callback to read a single chunk of a block from the SD card into the
- * endpoint, processing 16 bytes.
- */
-static uint8_t sd_read_block_handler(uint8_t* buffer, offset_t offset, void* p)
-{
-    /* Check if the endpoint is currently full */
-    if (!(Endpoint_IsReadWriteAllowed()))
-    {
-        /* Clear the endpoint bank to send its contents to the host */
-        Endpoint_ClearIN();
-
-        /* Wait until the endpoint is ready for more data */
-        if (Endpoint_WaitUntilReady())
-          return 0;
-    }
-
-    Endpoint_Write_Stream_LE(buffer, 16, NULL);
-
-    /* Check if the current command is being aborted by the host */
-    if (((USB_ClassInfo_MS_Device_t*)p)->State.IsMassStoreReset)
-      return 0;
-
-    return 1;
-}
-
-
-
 void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                     offset_t BlockAddress, uint16_t TotalBlocks)
 {
@@ -67,10 +37,18 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
-        /* Read this block into the endpoint in 16-byte chunks. */
-        sd_raw_read_interval(addr << VIRTUAL_MEMORY_BLOCK_SHIFT,
-                             sd_buffer, 16, VIRTUAL_MEMORY_BLOCK_SIZE,
-                             &sd_read_block_handler, MSInterfaceInfo);
+        sd_raw_cache_block(addr << VIRTUAL_MEMORY_BLOCK_SHIFT);
+
+        uint16_t written = 0;
+        uint8_t error;
+        while((error = Endpoint_Write_Stream_LE(
+                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written))
+              ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
+
+        if (error != ENDPOINT_RWSTREAM_NoError)
+        {
+            printf(":(");
+        }
     }
 
     /* If the endpoint is full, send its contents to the host */
@@ -79,33 +57,6 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Callback to get data from the endpoint in preparation for writing it
- * to the SD card.  Handles 16 bytes of data at a time.
- */
-static uintptr_t sd_write_block_handler(uint8_t* buffer, offset_t offset, void* p)
-{
-    /* Check if the endpoint is currently empty */
-    if (!(Endpoint_IsReadWriteAllowed()))
-    {
-        /* Clear the current endpoint bank */
-        Endpoint_ClearOUT();
-
-        /* Wait until the host has sent another packet */
-        if (Endpoint_WaitUntilReady())
-          return 0;
-    }
-
-    /* Read in 16 bytes and store it in the buffer, from where it
-     * will be loaded onto the SD card. */
-    Endpoint_Read_Stream_LE(buffer, 16, NULL);
-
-    /* Check if the current command is being aborted by the host */
-    if (((USB_ClassInfo_MS_Device_t*)p)->State.IsMassStoreReset)
-      return 0;
-
-    return 16;
-}
 
 void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                      offset_t BlockAddress, uint16_t TotalBlocks)
@@ -117,10 +68,21 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     const offset_t EndAddress = BlockAddress + TotalBlocks;
     for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
     {
-        /* Read this block into the endpoint in 16-byte chunks. */
-        sd_raw_write_interval(addr << VIRTUAL_MEMORY_BLOCK_SHIFT,
-                              sd_buffer, VIRTUAL_MEMORY_BLOCK_SIZE,
-                              &sd_write_block_handler, MSInterfaceInfo);
+        sd_raw_sync();
+        sd_raw_block_address = addr << VIRTUAL_MEMORY_BLOCK_SHIFT;
+        sd_raw_block_written = 0;
+
+        uint8_t error;
+        uint16_t written = 0;
+
+        while((error = Endpoint_Read_Stream_LE(
+                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written))
+              ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
+
+        if (error != ENDPOINT_RWSTREAM_NoError)
+        {
+            printf(":(");
+        }
     }
 
     /* If the endpoint is empty, clear it ready for the next packet from the host */
