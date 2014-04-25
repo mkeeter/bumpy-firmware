@@ -12,6 +12,7 @@
 #define SD_RAW_H
 
 #include <stdint.h>
+
 #include "sd_raw_config.h"
 
 #ifdef __cplusplus
@@ -120,6 +121,10 @@ struct sd_raw_info
      */
     uint8_t format;
 };
+
+extern uint8_t sd_raw_block[512];
+extern offset_t sd_raw_block_address;
+extern uint8_t sd_raw_block_written;
 
 typedef uint8_t (*sd_raw_read_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);
 typedef uintptr_t (*sd_raw_write_interval_handler_t)(uint8_t* buffer, offset_t offset, void* p);

@@ -147,12 +147,12 @@
 
 #if !SD_RAW_SAVE_RAM
 /* static data buffer for acceleration */
-static uint8_t raw_block[512];
-/* offset where the data within raw_block lies on the card */
-static offset_t raw_block_address;
+uint8_t sd_raw_block[512];
+/* offset where the data within sd_raw_block lies on the card */
+offset_t sd_raw_block_address;
 #if SD_RAW_WRITE_BUFFERING
 /* flag to remember if raw_block was written to the card */
-static uint8_t raw_block_written;
+uint8_t sd_raw_block_written;
 #endif
 #endif
 
@@ -163,6 +163,7 @@ static uint8_t sd_raw_card_type;
 static uint8_t sd_raw_rec_byte(void) ATTR_ALWAYS_INLINE;
 static void sd_raw_ignore_byte(void) ATTR_ALWAYS_INLINE;
 static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
+
 
 /**
  * \ingroup sd_raw
@@ -320,11 +321,11 @@ uint8_t sd_raw_init(void)
 
 #if !SD_RAW_SAVE_RAM
     /* the first block is likely to be accessed first, so precache it here */
-    raw_block_address = (offset_t) -1;
+    sd_raw_block_address = (offset_t) -1;
 #if SD_RAW_WRITE_BUFFERING
-    raw_block_written = 1;
+    sd_raw_block_written = 1;
 #endif
-    if(!sd_raw_read(0, raw_block, sizeof(raw_block)))
+    if(!sd_raw_read(0, sd_raw_block, sizeof(sd_raw_block)))
         return 0;
 #endif
 
@@ -423,6 +424,57 @@ uint8_t sd_raw_send_command(uint8_t command, uint32_t arg)
     return response;
 }
 
+
+/**
+ * \ingroup sd_raw
+ * Caches a block of data from the card.
+ *
+ * \param[in] block_address The block to read.
+ * \returns 0 on failure, 1 on success.
+ */
+uint8_t sd_raw_cache_block(offset_t block_address)
+{
+#if SD_RAW_WRITE_BUFFERING
+    if(!sd_raw_sync())
+        return 0;
+#endif
+
+    /* address card */
+    select_card();
+
+    /* send single block request */
+#if SD_RAW_SDHC
+    if(sd_raw_send_command(CMD_READ_SINGLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? block_address / 512 : block_address)))
+#else
+    if(sd_raw_send_command(CMD_READ_SINGLE_BLOCK, block_address))
+#endif
+    {
+        unselect_card();
+        return 0;
+    }
+
+    /* wait for data block (start byte 0xfe) */
+    while(sd_raw_rec_byte() != 0xfe);
+
+    /* read byte block */
+    uint8_t* cache = sd_raw_block;
+    for(uint16_t i = 0; i < 512; ++i)
+        *cache++ = sd_raw_rec_byte();
+    sd_raw_block_address = block_address;
+
+    /* read crc16 */
+    sd_raw_ignore_byte();
+    sd_raw_ignore_byte();
+
+    /* deaddress card */
+    unselect_card();
+
+    /* let card some time to finish */
+    sd_raw_ignore_byte();
+
+    return 1;
+}
+
 /**
  * \ingroup sd_raw
  * Reads raw data from the card.
@@ -449,7 +501,7 @@ uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length)
         
 #if !SD_RAW_SAVE_RAM
         /* check if the requested data is cached */
-        if(block_address != raw_block_address)
+        if(block_address != sd_raw_block_address)
 #endif
         {
 #if SD_RAW_WRITE_BUFFERING
@@ -485,12 +537,12 @@ uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length)
             }
 #else
             /* read byte block */
-            uint8_t* cache = raw_block;
+            uint8_t* cache = sd_raw_block;
             for(uint16_t i = 0; i < 512; ++i)
                 *cache++ = sd_raw_rec_byte();
-            raw_block_address = block_address;
+            sd_raw_block_address = block_address;
 
-            memcpy(buffer, raw_block + block_offset, read_length);
+            memcpy(buffer, sd_raw_block + block_offset, read_length);
             buffer += read_length;
 #endif
 
@@ -508,7 +560,7 @@ uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length)
         else
         {
             /* use cached data */
-            memcpy(buffer, raw_block + block_offset, read_length);
+            memcpy(buffer, sd_raw_block + block_offset, read_length);
             buffer += read_length;
         }
 #endif
@@ -677,7 +729,7 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
         /* Merge the data to write with the content of the block.
          * Use the cached block if available.
          */
-        if(block_address != raw_block_address)
+        if(block_address != sd_raw_block_address)
         {
 #if SD_RAW_WRITE_BUFFERING
             if(!sd_raw_sync())
@@ -686,18 +738,18 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
 
             if(block_offset || write_length < 512)
             {
-                if(!sd_raw_read(block_address, raw_block, sizeof(raw_block)))
+                if(!sd_raw_read(block_address, sd_raw_block, sizeof(sd_raw_block)))
                     return 0;
             }
-            raw_block_address = block_address;
+            sd_raw_block_address = block_address;
         }
 
-        if(buffer != raw_block)
+        if(buffer != sd_raw_block)
         {
-            memcpy(raw_block + block_offset, buffer, write_length);
+            memcpy(sd_raw_block + block_offset, buffer, write_length);
 
 #if SD_RAW_WRITE_BUFFERING
-            raw_block_written = 0;
+            sd_raw_block_written = 0;
 
             if(length == write_length)
                 return 1;
@@ -722,7 +774,7 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
         SPI_SendByte(0xfe);
 
         /* write byte block */
-        uint8_t* cache = raw_block;
+        uint8_t* cache = sd_raw_block;
         for(uint16_t i = 0; i < 512; ++i)
             SPI_SendByte(*cache++);
 
@@ -742,7 +794,7 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
         length -= write_length;
 
 #if SD_RAW_WRITE_BUFFERING
-        raw_block_written = 1;
+        sd_raw_block_written = 1;
 #endif
     }
 
@@ -817,11 +869,11 @@ uint8_t sd_raw_write_interval(offset_t offset, uint8_t* buffer, uintptr_t length
 uint8_t sd_raw_sync()
 {
 #if SD_RAW_WRITE_BUFFERING
-    if(raw_block_written)
+    if(sd_raw_block_written)
         return 1;
-    if(!sd_raw_write(raw_block_address, raw_block, sizeof(raw_block)))
+    if(!sd_raw_write(sd_raw_block_address, sd_raw_block, sizeof(sd_raw_block)))
         return 0;
-    raw_block_written = 1;
+    sd_raw_block_written = 1;
 #endif
     return 1;
 }
