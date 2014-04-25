@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <avr/io.h>
+#include <LUFA/Drivers/Peripheral/SPI.h>
 #include "sd_raw.h"
 
 /**
@@ -159,7 +160,6 @@ static uint8_t raw_block_written;
 static uint8_t sd_raw_card_type;
 
 /* private helper functions */
-static void sd_raw_send_byte(uint8_t b);
 static uint8_t sd_raw_rec_byte(void);
 static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
 
@@ -354,25 +354,9 @@ uint8_t sd_raw_locked(void)
 
 /**
  * \ingroup sd_raw
- * Sends a raw byte to the memory card.
- *
- * \param[in] b The byte to sent.
- * \see sd_raw_rec_byte
- */
-void sd_raw_send_byte(uint8_t b)
-{
-    SPDR = b;
-    /* wait for byte to be shifted out */
-    while(!(SPSR & (1 << SPIF)));
-    SPSR &= ~(1 << SPIF);
-}
-
-/**
- * \ingroup sd_raw
  * Receives a raw byte from the memory card.
  *
  * \returns The byte which should be read.
- * \see sd_raw_send_byte
  */
 uint8_t sd_raw_rec_byte(void)
 {
@@ -400,21 +384,21 @@ uint8_t sd_raw_send_command(uint8_t command, uint32_t arg)
     sd_raw_rec_byte();
 
     /* send command via SPI */
-    sd_raw_send_byte(0x40 | command);
-    sd_raw_send_byte((arg >> 24) & 0xff);
-    sd_raw_send_byte((arg >> 16) & 0xff);
-    sd_raw_send_byte((arg >> 8) & 0xff);
-    sd_raw_send_byte((arg >> 0) & 0xff);
+    SPI_SendByte(0x40 | command);
+    SPI_SendByte((arg >> 24) & 0xff);
+    SPI_SendByte((arg >> 16) & 0xff);
+    SPI_SendByte((arg >> 8) & 0xff);
+    SPI_SendByte((arg >> 0) & 0xff);
     switch(command)
     {
         case CMD_GO_IDLE_STATE:
-           sd_raw_send_byte(0x95);
+           SPI_SendByte(0x95);
            break;
         case CMD_SEND_IF_COND:
-           sd_raw_send_byte(0x87);
+           SPI_SendByte(0x87);
            break;
         default:
-           sd_raw_send_byte(0xff);
+           SPI_SendByte(0xff);
            break;
     }
     
@@ -725,16 +709,16 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
         }
 
         /* send start byte */
-        sd_raw_send_byte(0xfe);
+        SPI_SendByte(0xfe);
 
         /* write byte block */
         uint8_t* cache = raw_block;
         for(uint16_t i = 0; i < 512; ++i)
-            sd_raw_send_byte(*cache++);
+            SPI_SendByte(*cache++);
 
         /* write dummy crc16 */
-        sd_raw_send_byte(0xff);
-        sd_raw_send_byte(0xff);
+        SPI_SendByte(0xff);
+        SPI_SendByte(0xff);
 
         /* wait while card is busy */
         while(sd_raw_rec_byte() != 0xff);
