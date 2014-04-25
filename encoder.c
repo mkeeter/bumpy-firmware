@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include "encoder.h"
 #include "macros.h"
@@ -9,6 +10,7 @@ volatile int encoder=0;
 void encoder_bootloader_check(void)
 {
     PORTB |= (1 << PB6); // encoder switch pull-up
+    _delay_ms(100);
     if (encoder_switch)     __asm("jmp 0x7000");
 }
 
