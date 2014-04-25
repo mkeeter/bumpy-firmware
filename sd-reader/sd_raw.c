@@ -160,7 +160,7 @@ static uint8_t raw_block_written;
 static uint8_t sd_raw_card_type;
 
 /* private helper functions */
-static uint8_t sd_raw_rec_byte(void);
+static uint8_t sd_raw_rec_byte(void) ATTR_ALWAYS_INLINE;
 static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
 
 /**
@@ -363,8 +363,6 @@ uint8_t sd_raw_rec_byte(void)
     /* send dummy data for receiving some */
     SPDR = 0xff;
     while(!(SPSR & (1 << SPIF)));
-    SPSR &= ~(1 << SPIF);
-
     return SPDR;
 }
 
