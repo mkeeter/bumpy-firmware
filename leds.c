@@ -3,22 +3,26 @@
 #include <util/delay.h>
 
 #include "leds.h"
-#include "macros.h"
 
 uint8_t LEDs[8];      // Values from 0 to 7, with 7 being brightest
 
 void LEDs_init()
 {
-    OUTPUT(DDRD, PD4);  // SHCP (shift register clock input)
-    OUTPUT(DDRD, PD6);  // STCP (storage register clock input)
-    OUTPUT(DDRD, PD7);  // OE (output enable)
-    OUTPUT(DDRB, PB4);  // DS (serial data input)
+    // Shift register clock, storage register clock, output enable
+    // are all outputs.
+    DDRD |= (1 << PD4) | (1 << PD6) | (1 << PD7);
 
-    CLEAR(PORTD, PD7);   // Set output enable to 0 (enables outputs)
+    // Serial data input is also an output.
+    DDRB |= (1 << PB4);
 
-    SET(TIMSK0, OCIE0A); // output compare interrupt
+    // Set output enable to 0 (enables outputs on shift register)
+    PORTD &= ~(1 << PD7);
 
-    SET(TCCR0B, CS02); // 256x prescalar
+    // Enable output compare interrupt
+    TIMSK0 |= (1 << OCIE0A);
+
+    // Turn on timer0 with 256x prescalar
+    TCCR0B |= (1 << CS02);
 
     for (int i=0; i < 8; ++i)   LEDs[i] = 0;
 }
@@ -90,20 +94,19 @@ void update_LEDs(void)
     for (int i=0; i < 8; ++i)
     {
         if (LEDs[i] > tick) {
-            SET(PORTB, PB4);
+            PORTB |= (1 << PB4);
         } else {
-            CLEAR(PORTB, PB4);
+            PORTB &= ~(1 << PB4);
         }
 
-        // Pulse the clock (SHCP)
-        SET(PORTD, PD4);
-        CLEAR(PORTD, PD4);
+        // Pulse the clock (SHCP) to send this bit of data
+        PORTD |=  (1 << PD4);
+        PORTD &= ~(1 << PD4);
     }
 
-    // Toggle STCP high and low
-    SET(PORTD, PD6);
-    CLEAR(PORTD, PD6);
-
+    // Toggle STCP high and low to shift data to output stage
+    PORTD |=  (1 << PD6);
+    PORTD &= ~(1 << PD6);
 }
 
 

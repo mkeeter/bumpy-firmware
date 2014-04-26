@@ -3,7 +3,6 @@
 #include <util/delay.h>
 
 #include "encoder.h"
-#include "macros.h"
 
 volatile int encoder=0;
 

@@ -2,7 +2,6 @@
 #include <avr/interrupt.h>
 
 #include "tenths.h"
-#include "macros.h"
 
 volatile unsigned tenths = 0;
 
@@ -12,8 +11,8 @@ void tenths_init(void)
     OCR1AH = 0x07;
     OCR1AL = 0x35;
 
-    SET(TCCR1B, CS12); // 256x prescalar
-    SET(TIMSK1, OCIE1A);    // trigger interrupt
+    TCCR1B |= (1 << CS12); // 256x prescalar
+    TIMSK1 |= (1 << OCIE1A); // interrupt on output compare A
 }
 
 // After each tenth of a second, reset the timer.

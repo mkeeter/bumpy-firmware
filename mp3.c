@@ -3,7 +3,6 @@
 #include <LUFA/Drivers/Peripheral/SPI.h>
 
 #include "mp3.h"
-#include "macros.h"
 
 int mp3_volume = 5;
 
@@ -14,17 +13,9 @@ static void mp3_write_volume(void);
 // Initializes and checks mp3 player.  Returns 1 if successful, 0 otherwise.
 int mp3_init(void)
 {
-    // MP3 chip select
-    OUTPUT(DDRF, PF4);
-    SET(PORTF, PF4);
-
-    // MP3 data select
-    OUTPUT(DDRF, PF1);
-    SET(PORTF, PF1);
-
-    // MP3 chip reset
-    OUTPUT(DDRF, PF5);
-    SET(PORTF, PF5);
+    // MP3 chip select, data select, chip reset
+    DDRF  |= (1 << PF4) | (1 << PF1) | (1 << PF5);
+    PORTF |= (1 << PF4) | (1 << PF1) | (1 << PF5);
 
     // All of the spi stuff is configured by the SD card,
     // so we don't need to do anything here.
@@ -51,22 +42,22 @@ int mp3_init(void)
 
 static inline void mp3_select(void)
 {
-    CLEAR(PORTF, PF4);
+    PORTF &= ~(1 << PF4);
 }
 
 static inline void mp3_deselect(void)
 {
-    SET(PORTF, PF4);
+    PORTF |= (1 << PF4);
 }
 
 static inline void mp3_data_select(void)
 {
-    CLEAR(PORTF, PF1);
+    PORTF &= ~(1 << PF1);
 }
 
 static inline void mp3_data_deselect(void)
 {
-    SET(PORTF, PF1);
+    PORTF |= (1 << PF1);
 }
 
 // Checks DREQ line and returns True if it's high
@@ -78,7 +69,6 @@ inline bool mp3_wants_data(void)
 
 void mp3_send_data(uint8_t* buffer)
 {
-
     // Select the mp3 for a data transmission
     mp3_data_select();
 
@@ -89,7 +79,6 @@ void mp3_send_data(uint8_t* buffer)
 
     // Deselect SDI port.
     mp3_data_deselect();
-
 }
 
 static inline void mp3_wait(void)
