@@ -698,6 +698,98 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
 #endif
 }
 
+
+/**
+ * \ingroup sd_raw
+ * Reads multiple blocks and calls a callback function.
+ *
+ * This function starts reading at the specified offset. Every 512 bytes,
+ * it calls the callback function with the associated data buffer.
+ *
+ * By returning zero, the callback may stop reading.
+ *
+ * \note Within the callback function, you can not start another read or
+ *       write operation.
+ * \note This function only works if the following conditions are met:
+ *       - offset % 512 == 0
+ *
+ * \param[in] offset Offset from which to start reading.
+ * \param[in] block_count Number of blocks to read.
+ * \param[in] callback The function to call every interval bytes.
+ * \param[in] p An opaque pointer directly passed to the callback function.
+ * \returns 0 on failure, 1 on success
+ * \see sd_raw_read_interval, sd_raw_write_interval, sd_raw_read, sd_raw_write
+ */
+#if SD_RAW_WRITE_BUFFERING && !SD_RAW_SAVE_RAM
+uint8_t sd_raw_read_blocks(offset_t block_address, uintptr_t block_count, sd_raw_read_interval_handler_t callback, void* p)
+{
+    /* If we're only reading a single block, then do manually. */
+    if (block_count == 1)
+    {
+        sd_raw_cache_block(block_address);
+        callback(sd_raw_block, block_address, p);
+        return 1;
+    }
+
+    /* If we've already cached the first block, process it */
+    if (sd_raw_block_address == block_address)
+    {
+        callback(sd_raw_block, block_address, p);
+        block_address += 512;
+        if (!--block_count)
+            return 1;
+    }
+
+    /* Write the in-RAM raw block to the card. */
+    if(!sd_raw_sync())
+        return 0;
+
+    /* address card */
+    select_card();
+
+    /* send single block request */
+#if SD_RAW_SDHC
+    if(sd_raw_send_command(CMD_READ_MULTIPLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? block_address / 512 : block_address)))
+#else
+    if(sd_raw_send_command(CMD_READ_MULTIPLE_BLOCK, block_address))
+#endif
+    {
+        unselect_card();
+        return 0;
+    }
+
+    for (uintptr_t b=0; b < block_count; ++b)
+    {
+        /* wait for data block (start byte 0xfe) */
+        while(sd_raw_rec_byte() != 0xfe);
+
+        /* read byte block */
+        uint8_t* cache = sd_raw_block;
+        for(uint16_t i = 0; i < 512; ++i)
+            *cache++ = sd_raw_rec_byte();
+        sd_raw_block_address += 512;
+
+        /* read crc16 */
+        sd_raw_ignore_byte();
+        sd_raw_ignore_byte();
+
+        /* Activate the callback */
+        callback(sd_raw_block, sd_raw_block_address, p);
+    }
+
+    /* Stop transmission */
+    sd_raw_send_command(CMD_STOP_TRANSMISSION, 0);
+
+    /* deaddress card */
+    unselect_card();
+
+    /* let card some time to finish */
+    sd_raw_ignore_byte();
+
+    return 1;
+}
+#endif
+
 #if DOXYGEN || SD_RAW_WRITE_SUPPORT
 /**
  * \ingroup sd_raw
