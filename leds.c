@@ -3,6 +3,7 @@
 #include <util/delay.h>
 
 #include "leds.h"
+#include "tenths.h"
 
 uint8_t LEDs[8];      // Values from 0 to 7, with 7 being brightest
 
@@ -79,7 +80,11 @@ void LEDs_prev()
 void LEDs_usb()
 {
     for (int i=0; i < 8; ++i)
-        LEDs[i] = (i % 2);
+        LEDs[i] = 0;
+
+    unsigned t = tenths % 14;
+    if (t < 8)  LEDs[t] = 5;
+    else        LEDs[14-t] = 5;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
