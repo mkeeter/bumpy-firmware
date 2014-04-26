@@ -9,8 +9,13 @@ volatile int encoder=0;
 
 void encoder_bootloader_check(void)
 {
-    PORTB |= (1 << PB6); // encoder switch pull-up
+    // Turn on encoder switch pull-up
+    PORTB |= (1 << PB6);
+
+    // Wait a little bit for values to settle
     _delay_ms(100);
+
+    // Then jump to the bootloader if the switch is presed.
     if (encoder_switch)     __asm("jmp 0x7000");
 }
 
@@ -26,6 +31,11 @@ void encoder_init(void)
     // mask register value.
     PCICR |= (1 << PCIE0);
     PCMSK0 |= (1 << PCINT5);
+
+    // Prepare timer3 for use in debouncing.
+    OCR3AH = 0x00;
+    OCR3AL = 0x05;
+    TIMSK3 |= (1 << OCIE3A);
 }
 
 void encoder_clear(void)
@@ -39,8 +49,19 @@ ISR(PCINT0_vect)
 {
     // Only count a tick on a rising edge of ENCODER_B
     if (PINB & (1 << PB5)) {
-        // Determine direction from ENCODER_A
-        if (PINC & (1 << PC6))  encoder++;
-        else                    encoder--;
+        // Debouce by waiting until timer3 overflows
+        TCNT3H = 0;
+        TCNT3L = 0;
+        TCCR3B |= (1 << CS32);
     }
+}
+
+ISR(TIMER3_COMPA_vect)
+{
+    // Determine direction from ENCODER_A
+    if (PINC & (1 << PC6))  encoder++;
+    else                    encoder--;
+
+    // Then turn off the timer
+    TCCR3B &= ~(1 << CS32);
 }
