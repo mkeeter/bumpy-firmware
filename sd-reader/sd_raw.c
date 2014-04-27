@@ -736,8 +736,7 @@ uint8_t sd_raw_read_blocks(offset_t block_address, uintptr_t block_count, sd_raw
     {
         callback(sd_raw_block, block_address, p);
         block_address += 512;
-        if (!--block_count)
-            return 1;
+        block_count--;
     }
 
     /* Write the in-RAM raw block to the card. */

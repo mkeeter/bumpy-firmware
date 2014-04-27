@@ -27,6 +27,15 @@
 #include "sd_raw.h"
 #include "scsi.h"
 
+uint8_t sd_read_block_callback(uint8_t* buffer, offset_t offset, void* p)
+{
+    uint16_t written = 0;
+    while(Endpoint_Write_Stream_LE(
+                buffer, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
+          ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
+    return 1;
+}
+
 void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                     offset_t BlockAddress, uint16_t TotalBlocks)
 {
@@ -34,16 +43,8 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     if (Endpoint_WaitUntilReady())
         return;
 
-    const offset_t EndAddress = BlockAddress + TotalBlocks;
-    for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
-    {
-        sd_raw_cache_block(addr << VIRTUAL_MEMORY_BLOCK_SHIFT);
-
-        uint16_t written = 0;
-        while(Endpoint_Write_Stream_LE(
-                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
-              ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
-    }
+    sd_raw_read_blocks(BlockAddress << VIRTUAL_MEMORY_BLOCK_SHIFT,
+                       TotalBlocks, &sd_read_block_callback, NULL);
 
     /* If the endpoint is full, send its contents to the host */
     if (!(Endpoint_IsReadWriteAllowed()))
