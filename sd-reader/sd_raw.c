@@ -706,8 +706,6 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
  * This function starts reading at the specified offset. Every 512 bytes,
  * it calls the callback function with the associated data buffer.
  *
- * By returning zero, the callback may stop reading.
- *
  * \note Within the callback function, you can not start another read or
  *       write operation.
  * \note This function only works if the following conditions are met:

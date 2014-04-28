@@ -29,9 +29,9 @@
 
 uint8_t sd_read_block_callback(uint8_t* buffer, offset_t offset, void* p)
 {
-    uint16_t written = 0;
+    uint16_t count = 0;
     while(Endpoint_Write_Stream_LE(
-                buffer, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
+                buffer, VIRTUAL_MEMORY_BLOCK_SIZE, &count)
           ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
     return 1;
 }
