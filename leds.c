@@ -79,12 +79,12 @@ void LEDs_prev()
 
 void LEDs_usb()
 {
-    for (int i=0; i < 8; ++i)
-        LEDs[i] = 0;
-
     unsigned t = tenths % 14;
-    if (t < 8)  LEDs[t] = 5;
-    else        LEDs[14-t] = 5;
+    if (t >= 8)
+        t = 14 - t;
+
+    for (int i=0; i < 8; ++i)
+        LEDs[i] = (i == t) ? 5 : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
