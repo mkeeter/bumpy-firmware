@@ -53,6 +53,15 @@ void sd_read_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uintptr_t sd_write_block_callback(uint8_t* buffer, offset_t offset, void* p)
+{
+    uint16_t count = 0;
+    while(Endpoint_Read_Stream_LE(
+                buffer, VIRTUAL_MEMORY_BLOCK_SIZE, &count)
+          == ENDPOINT_RWSTREAM_IncompleteTransfer);
+    return VIRTUAL_MEMORY_BLOCK_SIZE;
+}
+
 void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                      offset_t BlockAddress, uint16_t TotalBlocks)
 {
@@ -60,18 +69,8 @@ void sd_write_blocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
     if (Endpoint_WaitUntilReady())
       return;
 
-    const offset_t EndAddress = BlockAddress + TotalBlocks;
-    for (offset_t addr = BlockAddress; addr < EndAddress; addr++)
-    {
-        sd_raw_sync();
-        sd_raw_block_address = addr << VIRTUAL_MEMORY_BLOCK_SHIFT;
-        sd_raw_block_written = 0;
-
-        uint16_t written = 0;
-        while(Endpoint_Read_Stream_LE(
-                    sd_raw_block, VIRTUAL_MEMORY_BLOCK_SIZE, &written)
-              ==  ENDPOINT_RWSTREAM_IncompleteTransfer);
-    }
+    sd_raw_write_blocks(BlockAddress << VIRTUAL_MEMORY_BLOCK_SHIFT,
+                        TotalBlocks, &sd_write_block_callback, NULL);
 
     /* If the endpoint is empty, clear it ready for the next packet from the host */
     if (!(Endpoint_IsReadWriteAllowed()))

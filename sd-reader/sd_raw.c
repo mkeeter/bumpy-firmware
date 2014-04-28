@@ -946,6 +946,99 @@ uint8_t sd_raw_write_interval(offset_t offset, uint8_t* buffer, uintptr_t length
 }
 #endif
 
+
+/**
+ * \ingroup sd_raw
+ * Writes a continuous data stream obtained from a callback function.
+ *
+ * This function starts writing at the specified offset. To obtain the
+ * next bytes to write, it calls the callback function. The callback fills the
+ * provided data buffer with 512 bytes.
+ *
+ * \note Within the callback function, you can not start another read or
+ *       write operation.
+ * \note This function only works if the following conditions are met:
+ *       - offset % 512 == 0
+ *
+ * \param[in] offset Offset where to start writing.
+ * \param[in] block_count Total number of blocks to write.
+ * \param[in] callback The function used to obtain the bytes to write.
+ * \param[in] p An opaque pointer directly passed to the callback function.
+ * \returns 0 on failure, 1 on success
+ * \see sd_raw_write_interval, sd_raw_read_interval, sd_raw_write, sd_raw_read
+ */
+uint8_t sd_raw_write_blocks(offset_t block_address, uintptr_t block_count, sd_raw_write_interval_handler_t callback, void* p)
+{
+    /* Write the in-RAM raw block to the card if necessary. */
+    if (block_address != sd_raw_block_address)
+        sd_raw_sync();
+
+    /* If we're only writing one or two blocks, then do so manually.
+     * (since this only necessitates a single block write)
+     */
+    if (block_count <= 2)
+    {
+        callback(sd_raw_block, block_address, p);
+        sd_raw_block_address = block_address;
+        sd_raw_block_written = 0;
+        if (block_count == 2) {
+            sd_raw_sync();
+            callback(sd_raw_block, block_address, p);
+            sd_raw_block_address += 512;
+            sd_raw_block_written = 0;
+        }
+        return 1;
+    }
+
+    /* address card */
+    select_card();
+#if SD_RAW_SDHC
+    if(sd_raw_send_command(CMD_WRITE_MULTIPLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? block_address / 512 : block_address)))
+#else
+    if (sd_raw_send_command(CMD_WRITE_MULTIPLE_BLOCK, block_address))
+#endif
+    {
+        unselect_card();
+        return 0;
+    }
+
+    sd_raw_block_address = block_address;
+    for (uintptr_t b=0; b < block_count - 1; ++b)
+    {
+        /* Get data from the callback. */
+        callback(sd_raw_block, block_address, p);
+
+        /* Send the 'continue transmission' token */
+        SPI_SendByte(0xfc);
+        uint8_t* cache = sd_raw_block;
+        for (uint16_t i=0; i < 512; ++i)
+            SPI_SendByte(*cache++);
+
+        /* write dummy crc16 */
+        SPI_SendByte(0xff);
+        SPI_SendByte(0xff);
+
+        /* Ignore data response token */
+        sd_raw_ignore_byte();
+
+        /* wait while card is busy */
+        while(sd_raw_rec_byte() != 0xff);
+
+        sd_raw_block_address += 512;
+    }
+    /* Load the last block into RAM without writing to the SD card. */
+    callback(sd_raw_block, block_address, p);
+    sd_raw_block_written = 0;
+
+    /* Terminate the write multiple block command with the end token */
+    SPI_SendByte(0xfd);
+
+    /* wait while card is busy */
+    while(sd_raw_rec_byte() != 0xff);
+
+    return 1;
+}
+
 #if DOXYGEN || SD_RAW_WRITE_SUPPORT
 /**
  * \ingroup sd_raw
