@@ -139,6 +139,11 @@ uint8_t sd_raw_locked(void);
 
 uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length);
 uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interval, uintptr_t length, sd_raw_read_interval_handler_t callback, void* p);
+#if SD_RAW_WRITE_BUFFERING && !SD_RAW_SAVE_RAM
+uint8_t sd_raw_read_blocks(offset_t block_address, uintptr_t block_count, sd_raw_read_interval_handler_t callback, void* p);
+uint8_t sd_raw_write_blocks(offset_t block_address, uintptr_t block_count, sd_raw_write_interval_handler_t callback, void* p);
+#endif
+
 uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length);
 uint8_t sd_raw_write_interval(offset_t offset, uint8_t* buffer, uintptr_t length, sd_raw_write_interval_handler_t callback, void* p);
 uint8_t sd_raw_sync(void);
