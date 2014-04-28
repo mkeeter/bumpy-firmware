@@ -1,6 +1,9 @@
-
 /*
- * Copyright (c) 2006-2012 by Roland Riegel <feedback@roland-riegel.de>
+ * Original copyright (c) 2006-2012 by Roland Riegel <feedback@roland-riegel.de>
+ *
+ * Modifications copyright (c) 2014 by Matthew Keeter <matt.j.keeter@gmail.com>
+ * (in particular, the sd_raw_cache_block, sd_raw_read_blocks, and
+ *  sd_raw_write_blocks functions)
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
