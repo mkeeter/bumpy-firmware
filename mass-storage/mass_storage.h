@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 void mass_storage_init(void);
+void mass_storage_eject(void);
 bool usb_task(void);
 
 #endif

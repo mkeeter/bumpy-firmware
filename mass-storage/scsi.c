@@ -30,9 +30,10 @@
  *  which wrap around standard SCSI device commands for controlling the actual storage medium.
  */
 
+#include "mass_storage.h"
 #include "scsi.h"
-#include "sd.h"
 #include "sd-reader/sd_manager.h"
+#include "sd-reader/sd_raw.h"
 
 /* Forward declarations */
 static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo);
@@ -127,7 +128,7 @@ bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
             CommandSuccess = SCSI_Command_ModeSense_6(MSInterfaceInfo);
             break;
         case SCSI_CMD_START_STOP_UNIT:
-            sd_raw_sync();
+            mass_storage_eject();
         case SCSI_CMD_TEST_UNIT_READY:
         case SCSI_CMD_PREVENT_ALLOW_MEDIUM_REMOVAL:
         case SCSI_CMD_VERIFY_10:

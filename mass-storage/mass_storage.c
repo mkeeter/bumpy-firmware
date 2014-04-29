@@ -1,6 +1,9 @@
 #include "descriptors.h"
 #include "scsi.h"
 
+#include "sd-reader/sd_raw.h"
+#include "player.h"
+
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
  *  passed to all Mass Storage Class driver functions, so that multiple instances of the same class
  *  within a device can be differentiated from one another.
@@ -26,19 +29,35 @@ USB_ClassInfo_MS_Device_t Disk_MS_Interface =
     },
 };
 
+static bool ejected = false;
+
 void mass_storage_init(void)
 {
     USB_Init();
 }
 
+void mass_storage_eject(void)
+{
+    sd_raw_sync();
+    ejected = true;
+    USB_Detach();
+    player_redraw();
+}
+
 bool usb_task(void)
 {
+    if (ejected && USB_DeviceState == DEVICE_STATE_Unattached)
+    {
+        USB_Attach();
+        ejected = false;
+    }
+
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return false;
 
     MS_Device_USBTask(&Disk_MS_Interface);
     USB_USBTask();
-    return true;
+    return !ejected;
 }
 
 /** Event handler for the library USB Configuration Changed event. */

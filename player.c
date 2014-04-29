@@ -34,7 +34,7 @@ void player_manage_buffer(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Redraws LEDs based on player state
-static void player_redraw(void)
+void player_redraw(void)
 {
     if (player_state.sleeping)
         LEDs_sleep();
