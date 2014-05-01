@@ -5,7 +5,7 @@
 #include "leds.h"
 #include "tenths.h"
 
-uint8_t LEDs[8];      // Values from 0 to 7, with 7 being brightest
+volatile uint8_t LEDs[8];      // Values from 0 to 7, with 7 being brightest
 
 void LEDs_init()
 {
