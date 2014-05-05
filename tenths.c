@@ -8,7 +8,7 @@ volatile unsigned tenths = 0;
 void tenths_init(void)
 {
     // Hit output compare about once every tenth of a second
-    OCR1AH = 0x07;
+    OCR1AH = 0x0c;
     OCR1AL = 0x35;
 
     TCCR1B |= (1 << CS12); // 256x prescalar
