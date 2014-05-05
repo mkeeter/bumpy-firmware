@@ -25,42 +25,50 @@ void encoder_init(void)
     PORTB |= (1 << PB6); // encoder switch
     PORTC |= (1 << PC6); // encoder A
 
-    // Encoder B is on the pin corresponding to PCINT11,
-    // so we'll enable pin change interrupt 1 with the correct
-    // mask register value.
-    PCICR |= (1 << PCIE0);
-    PCMSK0 |= (1 << PCINT5);
-
     // Prepare timer3 for use in debouncing.
+    // (running at 1 MHz and interrupting at 3906 KHz)
     OCR3AH = 0x00;
-    OCR3AL = 0x05;
+    OCR3AL = 0xff;
     TIMSK3 |= (1 << OCIE3A);
+    TCCR3B |= (1 << CS31);
 }
 
 void encoder_clear(void)
 {
-    PCICR &= ~(1 << PCIE0);
+    TIMSK3 &= ~(1 << OCIE3A);
     encoder = 0;
-    PCICR |=  (1 << PCIE0);
+    TIMSK3 |=  (1 << OCIE3A);
 }
 
-ISR(PCINT0_vect)
-{
-    // Only count a tick on a rising edge of ENCODER_B
-    if (PINB & (1 << PB5)) {
-        // Debouce by waiting until timer3 overflows
-        TCNT3H = 0;
-        TCNT3L = 0;
-        TCCR3B |= (1 << CS32);
-    }
-}
+static volatile uint8_t current_state = 0;
+static volatile uint8_t next_state = 0;
+static volatile uint8_t count = 0;
 
 ISR(TIMER3_COMPA_vect)
 {
-    // Determine direction from ENCODER_A
-    if (PINC & (1 << PC6))  encoder++;
-    else                    encoder--;
+    uint8_t state = ((PINB & (1 << PB5)) ? 1 : 0) |
+                    ((PINC & (1 << PC6)) ? 2 : 0);
 
-    // Then turn off the timer
-    TCCR3B &= ~(1 << CS32);
+    if (state == current_state)
+    {
+        ;
+    }
+    else if (state == next_state)
+    {
+        if (++count == 10)
+        {
+            if (current_state == 0 && next_state == 2)
+                encoder++;
+            else if (current_state == 0 && next_state == 1)
+                encoder--;
+            current_state = next_state;
+        }
+    }
+    else
+    {
+        next_state = state;
+        count = 0;
+    }
+    TCNT3H = 0;
+    TCNT3L = 0;
 }

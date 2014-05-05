@@ -39,6 +39,7 @@ int main(void)
 
     // Initialize player state
     player_init();
+
     while (1)
     {
         if (usb_task())
